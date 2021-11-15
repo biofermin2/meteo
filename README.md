@@ -7,6 +7,10 @@ this script named from meteorological phenomenon.
 
 このスクリプトは気象という英語から名付けました。
 
+今年（２０２１年）２月にtweetがあったように、
+
+気象庁のサイトからJSONデータを持ってくる事が出来るようになりました。
+
 ## setup
 this guidance made for linux users.
 
@@ -32,9 +36,13 @@ that's it.
 以上で、meteoスクリプトが使えるようになります。
 
 ## usage
+シェルのコマンドライン上でmeteoと実行すると、
+
+今日、明日、明後日までの天気予報がお天気マークと共に表示されます。
 
 ```shell
-$ meteo
+$ meteo[enter]
+(☁ . "くもり　所により　雨　で　雷を伴う")(☁ . "くもり　所により　夕方　まで　雨　で　雷を伴う")(☁☼ . "くもり　時々　晴れ")
 ```
 
 ### update history
