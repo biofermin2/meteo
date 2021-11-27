@@ -5,45 +5,58 @@ exec ros -Q -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  #+quicklisp(ql:quickload '(:unio :dexador :jonathan :alexandria) :silent t)
-  )					; => (:UNIO :DEXADOR :JONATHAN :ALEXANDRIA)
+  #+quicklisp(ql:quickload '(:unio :dexador :jonathan) :silent t)
+  )					; => (:UNIO :DEXADOR :JONATHAN)
 
 (defpackage :ros.script.meteo.3845973535
-  (:use :cl :unio :dexador :jonathan :alexandria)
-  (:shadow :delete :get))		; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
+  (:use :cl :unio :dexador :jonathan)
+  (:shadow :delete :get)
+  (:export :local-info))		  ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
-(defconstant url "https://www.jma.go.jp/bosai/forecast/data/forecast/170000.json") ; => URL
-(defparameter s-json (parse (dex:get url))) ; => S-JSON
-(defvar weather)			    ; => WEATHER
-(defvar noto)				    ; => NOTO
-(defvar weathers)			    ; => WEATHERS
-(defvar weather-code)			    ; => WEATHER-CODE
 
-(sets weather (seek "weather" (format nil "~s" s-json))) ; => 
-(setf noto (cadr weather))
-(setf weathers (getf noto :|weathers|))
-(setf weather-code (getf noto :|weatherCodes|))
+(defparameter area-url
+  "https://www.jma.go.jp/bosai/common/const/area.json"
+  "エリア情報のJSONデータ")			    ; => AREA-URL
+(defparameter area-json (parse (dex:get area-url))) ; => AREA-JSON
+(defconstant url-base "https://www.jma.go.jp/bosai/forecast/data/forecast/") ; => URL-BASE
 
-(setf w-code-plist
+(defparameter area-info nil)		; => AREA-INFO
+(defparameter w-code-plist
       '(100 ☼ 101 ☼☁ 102 ☼☔ 104 ☼☃ 110 ☼→☁ 111 ☼→☁ 112 ☼→☔ 115 ☼→☃
-	200 ☁ 201 ☁☼ 202 ☁☔ 204 ☁☃ 210 ☁→☼
+	200 ☁ 201 ☁☼ 202 ☁☔ 204 ☁☃ 210 ☁→☼ 211 ☁→☼
 	300 ☔ 301 ☔☼ 302 ☔☁ 303 ☔☃
 	400 ☃ 401 ☃☼ 402 ☃☁ 403 ☃☔
 	500 ☆🌙 501 ☆🌙☁ 502 ☆🌙☔ 504 ☆🌙☃ 510 ☆🌙→☁ 512 ☆🌙→☔
 	601 ☁⭐🌙 610 ☁→⭐🌙
 	701 ☔⭐🌙
-	801 ☃⭐🌙))
-(setf ht (plist-hash-table w-code-plist :test #'equal)) ; => #<HASH-TABLE :TEST EQUAL :COUNT 31 {100330BAF3}>
+	801 ☃⭐🌙))			; => W-CODE-PLIST
+
+(defun upper-codes (muni)
+  "put only Municipality as argument"
+  (sets area-info (seek muni area-json))
+  (let ((code (getf (car area-info) 'parent)))
+    (values (format nil "~6,'0d" (* 1000 (truncate (/ code 1000.0))))
+	    (format nil "~6,'0d" (* 10 (truncate (/ code 10.0))))))) ; => UPPER-CODES
 
 (defun code->sym (code)
-    (if (stringp code)
-            (gethash (parse-integer code) ht)
-	          (gethash code ht))); => CODE->SYM
+  "change from weather code to symbol mark"
+  (getf w-code-plist code))		; => CODE->SYM
 
+(defparameter local-data nil)		; => LOCAL-DATA
 
-(defun main (&rest argv)
+(defun local-info (muni)
+  (multiple-value-bind (prefs local)
+      (upper-codes muni)
+    (sets local-data
+	  (seek local (parse (dex:get (format nil "~a~a.json" url-base prefs))) 1))
+    (let ((d (car local-data)))
+      (format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
+			       (getf d 'weathers))))))) ; => LOCAL-INFO
+
+;;(local-info '岐阜市)			; => ((☼ . 晴れ) (☼ . 晴れ) (☼ . 晴れ))
+
+(defun main (argv)
   (declare (ignorable argv))
-  (format t "~{~s~}" (reverse (pairlis (mapcar #'code->sym weather-code) weathers))) 
-  )					; => MAIN
+  (local-info argv))			; => MAIN
 
 ;;; vim: set ft=lisp lisp:
