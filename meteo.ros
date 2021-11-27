@@ -14,6 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :local-info))		  ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
+(defparameter version "0.1.1")
 (defparameter area-url
   "https://www.jma.go.jp/bosai/common/const/area.json"
   "エリア情報のJSONデータ")			    ; => AREA-URL
