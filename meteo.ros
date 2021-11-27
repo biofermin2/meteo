@@ -53,10 +53,31 @@ exec ros -Q -- $0 "$@"
       (format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
 			       (getf d 'weathers))))))) ; => LOCAL-INFO
 
-;;(local-info '岐阜市)			; => ((☼ . 晴れ) (☼ . 晴れ) (☼ . 晴れ))
+(defconstant print-help
+  "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
+and print it on your command line.
 
-(defun main (argv)
+usage: $ meteo <your municipality in Chinese character>
+
+option:
+  -v, --version  print version
+  -h, --help     print helpp
+")					; => PRINT-HELP
+
+(defun main (&rest argv)
   (declare (ignorable argv))
-  (local-info argv))			; => MAIN
+  (let ((1st (car argv))
+	(2nd (cadr argv)))
+    (cond
+      ((or (string= 1st "--version")
+	   (string= 1st "-v"))
+       (format t "~a~%" version))
+      ((or (string= 1st "--help")
+	   (string= 1st "-h"))
+       (format t print-help))
+      (t (local-info 1st)	
+	 (if (string= 2nd "-d")
+	     (format t "~s" local-data)))))) ; => MAIN
+
 
 ;;; vim: set ft=lisp lisp:
