@@ -54,6 +54,7 @@ exec ros -Q -- $0 "$@"
       (format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
 			       (getf d 'weathers))))))) ; => LOCAL-INFO
 
+
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
 and print it on your command line.
@@ -61,8 +62,16 @@ and print it on your command line.
 usage: $ meteo <your municipality in Chinese character>
 
 option:
-  -v, --version  print version
-  -h, --help     print helpp
+  -v, --version   print version
+  -h, --help      print helpp
+
+usage: $ meteo <option>
+
+sub option:
+  -d, --detail    print detail info
+  -a, --area-info print area info
+
+usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
 
 (defun main (&rest argv)
@@ -76,9 +85,13 @@ option:
       ((or (string= 1st "--help")
 	   (string= 1st "-h"))
        (format t print-help))
-      (t (local-info 1st)	
-	 (if (string= 2nd "-d")
-	     (format t "~s" local-data)))))) ; => MAIN
+      (t (local-info 1st)
+	 (cond ((or (string= 2nd "-d")
+		    (string= 2nd "--detail"))
+		(format t "~s" local-data))
+	       ((or (string= 2nd "-a")
+		    (string= 2nd "--area-info"))
+		(format t "~s" area-info))))))) ; => MAIN
 
 
 ;;; vim: set ft=lisp lisp:
