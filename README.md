@@ -29,10 +29,14 @@ $ ros install biofermin2/meteo
 ```
 
 meteo.rosというファイルを自分の好きなパスに設定して上げます。
+パスについては$ echo $PATHで表示されたパスの中から適当に
+選択して下さい(/usr/binなど）。
 
 ```shell
-sudo ln -s ~/.roswell/local-projects/biofermin2/meteo/meteo.ros <your path>
+$ sudo ln -s ~/.roswell/local-projects/biofermin2/meteo/meteo.ros <your path>
 ```
+
+
 that's that.
 
 以上で、meteoスクリプトが使えるようになります。
