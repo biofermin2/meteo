@@ -38,16 +38,23 @@ that's that.
 以上で、meteoスクリプトが使えるようになります。
 
 ## usage
-シェルのコマンドライン上で下記の通り実行すると、
+if you execute meteo command as the follow line,
+you can check the weather forcast these 3 days with symbol.
 
+シェルのコマンドライン上で下記の通り実行すると、
 今日、明日、明後日までの天気予報がお天気マークと共に表示されます。
 
 ```shell
+;; you can designate your municipality even if it is alphabet. but sometimes it cause some errors.so please see the solutions below.
 ;; 調べたい市町村名を漢字で入力して下さい。（ひらがなやアルファベットでも可能ですが、同音の別の市町村を引っ張ってくる可能性があります。）
 $ meteo <your municipality>[enter]
 (☁ . "くもり　所により　雨　で　雷を伴う")(☁ . "くもり　所により　夕方　まで　雨　で　雷を伴う")(☁☼ . "くもり　時々　晴れ")
 ```
+the usage of the options is as follows.
+
 オプションの使い方は下記の通りです。
+
+help
 
 ヘルプの表示
 
@@ -55,19 +62,27 @@ $ meteo <your municipality>[enter]
 $ meteo -h
 ```
 
+version info
+
 バージョン情報の表示
 
 ```shell
 $ meteo -v
 ```
 
+The sub-options are also used as follows.
+
 また、サブオプションは下記のように使います。
+
+detail info
 
 詳細情報の表示
 
 ```shell
 $ meteo <municipality> -d
 ```
+
+area info
 
 エリア情報の表示
 
@@ -130,6 +145,22 @@ $ meteo wajima -a
  (PARENT 110011 KANA かわじままち ENNAME KAWAJIMA TOWN NAME 川島町))
 ```
 
+またこの様なトラブルを防ぐために英語表記の際、頭文字を大文字で書いたり、
+CityかTownまで明記する事によって防げます。ただCityやTownを付ける場合、
+サブオプションは使えませんのでご注意下さい。
+
+```shell
+$ meteo Wajima -a 
+((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
+((PARENT 170021 KANA わじまし ENNAME WAJIMA CITY NAME 輪島市))
+
+$ meteo Wajima City -a 
+((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
+```
+
+上記をまとめると、より確実な順は
+PARENTナンバー＞漢字＞頭文字が大文字のアルファベット＞ひらがな・頭文字も小文字のアルファベット
+となります。
 
 
 ### update history
