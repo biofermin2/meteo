@@ -48,7 +48,8 @@ you can check the weather forcast these 3 days with symbol.
 ;; you can designate your municipality even if it is alphabet. but sometimes it cause some errors.so please see the solutions below.
 ;; 調べたい市町村名を漢字で入力して下さい。（ひらがなやアルファベットでも可能ですが、同音の別の市町村を引っ張ってくる可能性があります。）
 $ meteo <your municipality>[enter]
-(☁ . "くもり　所により　雨　で　雷を伴う")(☁ . "くもり　所により　夕方　まで　雨　で　雷を伴う")(☁☼ . "くもり　時々　晴れ")
+((☁ . "くもり　所により　雨　で　雷を伴う")(☁ . "くもり　所により　夕方　まで　雨　で　雷を伴う")(☁☼ . "くもり　時々　晴れ")) ;weather info
+;; ((today)(tomorrow)(day after tomorrow))
 ```
 the usage of the options is as follows.
 
@@ -95,8 +96,8 @@ $ meteo <municipality> -a
 
 ```shell
 $ meteo わじまし -d
-((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
-((WAVES (1メートル 1メートル |1メートル 後 2メートル|) WINDS
+((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))            ; weather info
+((WAVES (1メートル 1メートル |1メートル 後 2メートル|) WINDS                         ;detail info
   (|西の風 後 東の風| |南東の風 後 東の風| |東の風 後 北西の風 やや強く|) WEATHERS
   (晴れ |晴れ 昼過ぎ から 時々 くもり| |くもり 時々 雨|) WEATHERCODES (100 110 203) AREA
   (CODE 380030 NAME 南予))
@@ -109,8 +110,8 @@ $ meteo わじまし -d
  
  ```shell
  $ meteo わじまし -a
-((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
-((PARENT 380032 KANA うわじまし ENNAME UWAJIMA CITY NAME 宇和島市)
+((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨)) ; weather info
+((PARENT 380032 KANA うわじまし ENNAME UWAJIMA CITY NAME 宇和島市)     ;area info
  (PARENT 170021 KANA わじまし ENNAME WAJIMA CITY NAME 輪島市))
  ```
  
@@ -151,11 +152,11 @@ CityかTownまで明記する事によって防げます。ただCityやTownを�
 
 ```shell
 $ meteo Wajima -a 
-((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
+((☼ . 晴れ) (☼☁ . 晴れ 時々 くもり) (☼→☔ . 晴れ 後 一時 雨))
 ((PARENT 170021 KANA わじまし ENNAME WAJIMA CITY NAME 輪島市))
 
 $ meteo Wajima City -a 
-((☼ . 晴れ) (☼→☁ . 晴れ 昼過ぎ から 時々 くもり) (☁☔ . くもり 時々 雨))
+((☼ . 晴れ) (☼☁ . 晴れ 時々 くもり) (☼→☔ . 晴れ 後 一時 雨))
 ```
 
 上記をまとめると、より確実な順は
