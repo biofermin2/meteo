@@ -1,5 +1,7 @@
 # meteo
-meteo is a roswell script that picks weather forcast data up from Japan Meteorological Agency and shows it on your command line.
+meteo is a roswell script that picks weather forcast data up 
+
+from Japan Meteorological Agency and shows it on your command line.
 
 気象庁の天気予報データをコマンドラインに表示するツール
 
@@ -100,6 +102,7 @@ $ meteo <municipality> -a
 ```
 
 例えば、能登の輪島市の場合、通常”輪島市"で検索かければ表示出来ますが、
+
 わざと”わじまし”で詳細情報を見たとしましょう。
 
 ```shell
