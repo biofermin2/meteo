@@ -108,6 +108,14 @@ then you can check it by your favorite viewer.
 
 上記の天気図をダウンロードします。
 
+例えばこういう感じにshell scriptと組み合わせてみます。
+
+```shell
+$ for i in {1..4};do; meteo -t $i;done
+$ ls *.png
+around-Japan-color-2021-12-07.png  around-Japan-mono-2021-12-07.png  asia-pacific-color-2021-12-07.png  asia-pacific-mono-2021-12-07.png 
+```
+
 png形式の画像なのでお好みの描画ソフトでご覧下さい。
 
 The sub-options are also used as follows.
