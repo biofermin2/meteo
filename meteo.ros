@@ -40,9 +40,13 @@ exec ros -Q -- $0 "$@"
   "put only Municipality as argument"
   (let ((area-json (parse (dex:get area-url))))
     (sets area-info (seek muni area-json)))
-  (let ((code (getf (read-from-string (car area-info)) 'parent)))
-    (values (format nil "~6,'0d" (* 1000 (truncate (/ code 1000.0))))
-	    (format nil "~6,'0d" (* 10 (truncate (/ code 10.0))))))) ; => UPPER-CODES
+  (let* ((code (getf (read-from-string (car area-info)) 'parent))
+	 (prefs-code (* 1000 (truncate (/ code 1000))))
+	 (local-code (* 10 (truncate (/ code 10)))))
+    (when (= prefs-code 460000) ;[2021-12-08 01:21:24] for kagoshima area
+      (setq prefs-code (+ prefs-code 100)))
+	  (values (format nil "~6,'0d" prefs-code)
+		  (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
 (defun code->sym (code)
   "change from weather code to symbol mark"
