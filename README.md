@@ -42,7 +42,6 @@ meteo.rosというファイルを自分の好きなパスに設定して上げ�
 $ sudo ln -s ~/.roswell/local-projects/biofermin2/meteo/meteo.ros <your path>
 ```
 
-
 that's that.
 
 以上で、meteoスクリプトが使えるようになります。
@@ -80,6 +79,36 @@ version info
 ```shell
 $ meteo -v
 ```
+get weather maps
+
+各種天気図の取得
+
+```shell
+$ meteo -t number ;(number:1〜4)
+```
+1: asia-pacific region monochrome
+
+2: asia-pacific region color
+
+3: around Japan monochrome
+
+4: around Japan color
+
+it starts download above weather map png file.
+
+then you can check it by your favorite viewer.
+
+1:アジア太平洋域（白黒）
+
+2:アジア太平洋域（カラー）
+
+3:日本周辺（白黒）
+
+4:日本周辺（カラー）
+
+上記の天気図をダウンロードします。
+
+png形式の画像なのでお好みの描画ソフトでご覧下さい。
 
 The sub-options are also used as follows.
 
@@ -184,6 +213,8 @@ PARENTナンバー＞漢字＞頭文字が大文字のアルファベット＞�
 
 
 ### update history
+[2021-12-07] 0.1.2 天気図のダウンロードオプションの追加。
+
 [2021-11-28] 0.1.1 ヘルプの追加。サブオプションの追加。
 
 [2021-11-27] 0.1.0 全国の市町村に対応。（但し、同一市町村名など未対応）←[2021-11-28]対応方法追加
