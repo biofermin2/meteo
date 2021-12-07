@@ -98,13 +98,13 @@ exec ros -Q -- $0 "$@"
 					  :do (write-byte b out))))) ; => DOWNLOAD-FILE
 
 (defun out-png-name (n)
-  (let (label)
-    (setq label
+  (let (prefix)
+    (setq prefix
 	  (cond ((string= n "1") "asia-pacific-mono")
 		((string= n "2") "asia-pacific-color")
 		((string= n "3") "around-Japan-mono")
 		((string= n "4") "around-Japan-color")))
-    (format nil "~a-~a~a" label (timestamp) ".png"))) ; => OUT-PNG-NAME
+    (format nil "~a-~a~a" prefix (timestamp) ".png"))) ; => OUT-PNG-NAME
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
