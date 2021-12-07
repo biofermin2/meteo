@@ -40,7 +40,7 @@ exec ros -Q -- $0 "$@"
   "put only Municipality as argument"
   (let ((area-json (parse (dex:get area-url))))
     (sets area-info (seek muni area-json)))
-  (let ((code (getf (car area-info) 'parent)))
+  (let ((code (getf (read-from-string (car area-info)) 'parent)))
     (values (format nil "~6,'0d" (* 1000 (truncate (/ code 1000.0))))
 	    (format nil "~6,'0d" (* 10 (truncate (/ code 10.0))))))) ; => UPPER-CODES
 
@@ -53,7 +53,7 @@ exec ros -Q -- $0 "$@"
       (upper-codes muni)
     (sets local-data
 	  (seek local (parse (dex:get (format nil "~a~a.json" url-base prefs))) 1))
-    (let ((d (car local-data)))
+    (let ((d (read-from-string (car local-data))))
       (format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
 					 (getf d 'weathers))))))) ; => LOCAL-INFO
 
