@@ -39,8 +39,7 @@ exec ros -Q -- $0 "$@"
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let ((area-json (parse (dex:get area-url))))
-    (sets area-info (seek muni area-json)))
-	(error area-info)
+    (sets area-info (seek muni area-json))
   (let* ((code (getf (read-from-string (car area-info)) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
