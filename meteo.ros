@@ -43,8 +43,9 @@ exec ros -Q -- $0 "$@"
   (let* ((code (getf (read-from-string (car area-info)) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
-    (when (= prefs-code 460000) ;[2021-12-08 01:21:24] for kagoshima area
-      (setq prefs-code (+ prefs-code 100)))
+    (cond ((or (= prefs-code 460000)
+	       (= prefs-code 014000)) (setq prefs-code (+ prefs-code 100)))
+	  ((= prefs-code 011000) (setq local-code prefs-code))) 
 	  (values (format nil "~6,'0d" prefs-code)
 		  (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
