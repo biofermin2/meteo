@@ -135,6 +135,29 @@ sub option:
 usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
 
+
+(defun system (control-string &rest args)
+  "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
+synchronously execute the result using a Bourne-compatible shell, with
+output to *verbose-out*.  Returns the shell's exit code."
+  (let ((command (apply #'format nil control-string args)))
+    (format t "; $ ~A~%" command)
+    #+sbcl
+    (sb-impl::process-exit-code
+     (sb-ext:run-program
+      "/usr/bin/zsh"
+      (list  "-c" command)
+      :input nil :output *standard-output*))
+    #+(or cmu scl)
+    (ext:process-exit-code
+     (ext:run-program
+      "/bin/sh"
+      (list  "-c" command)
+      :input nil :output *verbose-out*))
+    #+clisp             ;XXX not exactly *verbose-out*, I know
+    (ext:run-shell-command  command :output :terminal :wait t)
+    ))					; => SYSTEM
+	
 (defun main (&rest argv)
   (declare (ignorable argv))
   (let ((1st (car argv))
@@ -147,7 +170,10 @@ usage: $ meteo <municipality> <sub option>
 	   (string= 1st "-h"))
        (format t print-help))
       ((string= 1st "-t")
-       (download-file (png-url (parse-integer 2nd)) (out-png-name 2nd)))
+       (let ((png-file (out-png-name 2nd)))
+	 (download-file (png-url (parse-integer 2nd)) png-file)
+	 ;;(system (format nil "sxiv ~a~a" (user-homedir-pathname) png-file)) ;need sxiv,you can choose another viewer as you like instead of it.
+	 ))
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
 		    (string= 2nd "--detail"))
