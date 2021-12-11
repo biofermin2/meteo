@@ -66,12 +66,12 @@ exec ros -Q -- $0 "$@"
 (defconstant base-url2	"https://www.jma.go.jp/bosai/weather_map/data/png/") ; => BASE-URL2
 (defparameter now-list nil)						     ; => NOW-LIST
 
-(defun timestamp ()
+(defun today ()
   "現在日付の取得"
   (multiple-value-bind (s m h dd mm yy)
       (decode-universal-time (get-universal-time))
     (declare (ignore s m h))
-    (format nil "~4,'0D-~2,'0D-~2,'0D" yy mm dd))) ; => TIMESTAMP
+    (format nil "~4,'0D-~2,'0D-~2,'0D" yy mm dd)))
 
 (sets now-list
       (seek "now"
@@ -109,7 +109,7 @@ exec ros -Q -- $0 "$@"
 		((string= n "2") "asia-pacific-color")
 		((string= n "3") "around-Japan-mono")
 		((string= n "4") "around-Japan-color")))
-    (format nil "~a-~a~a" prefix (timestamp) ".png"))) ; => OUT-PNG-NAME
+    (format nil "~a-~a~a" prefix (today) ".png"))) ; => OUT-PNG-NAME
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
