@@ -36,18 +36,29 @@ exec ros -Q -- $0 "$@"
 	701 ☔⭐🌙
 	801 ☃⭐🌙))			; => W-CODE-PLIST
 
+(defun prompt-read (prompt)
+  (format *query-io* "~a: " prompt)
+  (force-output *query-io*)
+  (read-line *query-io*))		; => PROMPT-READ
+
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let ((area-json (parse (dex:get area-url))))
-    (sets area-info (seek muni area-json))
-  (let* ((code (getf (read-from-string (car area-info)) 'parent))
+    (sets area-info (seek muni area-json)))
+  (let* ((i-len (length area-info))
+	 (prmpt (format nil "~a~%上記のリストの内1から~dの要素のうちいずれかを選択しなさい:" area-info i-len))
+	 (info (if (= i-len 1)
+		   (car area-info)
+		 (eval (read-from-string
+			(format nil "(~:r area-info)" (parse-integer (prompt-read prmpt) :junk-allowed t))))))
+	 (code (getf (read-from-string info) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
     (cond ((or (= prefs-code 460000)
-	       (= prefs-code 014000)) (setq prefs-code (+ prefs-code 100)))
+	       (= prefs-code 014000)) (incf prefs-code 100))
 	  ((= prefs-code 011000) (setq local-code prefs-code))) 
-	  (values (format nil "~6,'0d" prefs-code)
-		  (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
+    (values (format nil "~6,'0d" prefs-code)
+	    (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
 (defun code->sym (code)
   "change from weather code to symbol mark"
