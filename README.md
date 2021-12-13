@@ -117,8 +117,8 @@ around-Japan-color-2021-12-07.png  around-Japan-mono-2021-12-07.png  asia-pacifi
 ```
 
 png形式の画像なのでお好みの描画ソフトでご覧下さい。
-（sxivがインストールされている場合はソース内のコメントを外すと
-sxivで自動的に開くようになっています。外部アプリケーション依存のため
+（xdg-openの行のコメントを外せば、デフォルトのviewerで
+自動的に見る事が出来ます。外部アプリケーション依存のため
 ソース内ではコメントアウトしてあります。）
 
 The sub-options are also used as follows.
