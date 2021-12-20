@@ -14,7 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defparameter version "0.1.7")		; => VERSION
+(defparameter version "0.1.8")		; => VERSION
 (defparameter area-url
   "https://www.jma.go.jp/bosai/common/const/area.json"
   "エリア情報のJSONデータ")		; => AREA-URL
@@ -24,6 +24,7 @@ exec ros -Q -- $0 "$@"
   "予報データのURLベース")		; => URL-BASE
 
 (defparameter area-info nil)		; => AREA-INFO
+(defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
 (defparameter local-data nil)		; => LOCAL-DATA
 
 (defparameter w-code-plist
@@ -36,29 +37,42 @@ exec ros -Q -- $0 "$@"
 	701 ☔⭐🌙 711 ☔→⭐🌙
 	801 ☃⭐🌙 811 ☃→⭐🌙))			; => W-CODE-PLIST
 
+
 (defun prompt-read (prompt)
+  "copy from pratical common lisp"
   (format *query-io* "~a: " prompt)
   (force-output *query-io*)
   (read-line *query-io*))		; => PROMPT-READ
 
-(defun select-info (info)
-  (if (= (length info) 1)
-      (car info)
-      (loop :for i :in info
-	    :count i :into cnt
-	    :do (format *query-io* "~d: ~s~%" cnt i)
-	    :finally (format *query-io* "select a number[1-~d]" cnt)))) ; => SELECT-INFO
+(defun put-ht (k v ht)
+  (setf (gethash k ht) v))		; => PUT-HT
 
+(defun puts-ht (lst ht)
+  (loop :for i :in lst
+	:count i :into cnt
+	:do (put-ht cnt i ht)))		; => PUTS-HT
+
+(defun chk-ht (ht)
+    (maphash #'(lambda (k v)
+		 (format t "~a: ~a~%" k v))
+	     ht))			; => CHK-HT
+
+(defun select-value (ht &aux (cnt (hash-table-count ht)))
+  (loop :for k :being :the hash-keys :in ht
+	  :using (hash-value v)
+	:do (format *query-io* "~d: ~s~%" k v)
+	:finally (format *query-io* "select a number[1-~d]" cnt))) ; => SELECT-VALUE
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let ((area-json (parse (dex:get area-url))))
-    (sets area-info (seek muni area-json))) 
-  (let* ((info (if (= (length area-info) 1)
+    (sets area-info (seek muni area-json))
+    (puts-ht area-info area-ht))
+  (let* ((info (if (= 1 (hash-table-count area-ht))
 		   (car area-info)
-		 (eval (read-from-string
-			(format nil "(~:r area-info)"
-				(parse-integer (prompt-read (select-info area-info)) :junk-allowed t))))))
+		   (gethash
+		    (parse-integer (prompt-read (select-value area-ht)) :junk-allowed t)
+		     area-ht)))
 	 (code (getf (read-from-string info) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
@@ -157,6 +171,7 @@ usage: $ meteo <municipality> <sub option>
 
 
 (defun system (control-string &rest args)
+	;; copy from somewhere. sorry, I forgot.
   "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
 synchronously execute the result using a Bourne-compatible shell, with
 output to *verbose-out*.  Returns the shell's exit code."
