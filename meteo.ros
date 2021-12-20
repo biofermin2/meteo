@@ -112,6 +112,7 @@ exec ros -Q -- $0 "$@"
 	    (parse (dex:get "https://www.jma.go.jp/bosai/weather_map/data/list.json") :as :alist))) 
 
 (defmacro set-readtable (opt &body body)
+  "opt:upcase,downcase,preserve,invert"
   `(let ((*readtable* (copy-readtable nil)))
      (setf (readtable-case *readtable*) ,opt)
      ,@body))				; => SET-READTABLE
