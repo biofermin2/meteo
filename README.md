@@ -223,6 +223,7 @@ PARENTナンバー＞漢字＞頭文字が大文字のアルファベット＞�
 エラーとなります。
 
 その他捕捉記事はqiitaにもまとめたので、もしよろしければご参照下さい。
+
 https://qiita.com/biofermin2/items/22634286290e779c36d5
 
 ### update history
