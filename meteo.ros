@@ -14,7 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defparameter version "0.1.8")		; => VERSION
+(defparameter version "0.1.9")		; => VERSION
 (defparameter area-url
   "https://www.jma.go.jp/bosai/common/const/area.json"
   "エリア情報のJSONデータ")		; => AREA-URL
@@ -54,10 +54,12 @@ exec ros -Q -- $0 "$@"
 	     ht))			; => CHK-HT
 
 (defun select-value (ht &aux (cnt (hash-table-count ht)))
-  (loop :for k :being :the hash-keys :in ht
-	  :using (hash-value v)
-	:do (format *query-io* "~d: ~s~%" k v)
-	:finally (format *query-io* "select a number[1-~d]" cnt))) ; => SELECT-VALUE
+  (if (= cnt 0)
+      (error "There is no information applicable to the specified area.")
+      (loop :for k :being :the hash-keys :in ht
+	      :using (hash-value v)
+	    :do (format *query-io* "~d: ~s~%" k v)
+	    :finally (format *query-io* "select a number[1-~d]" cnt)))) ; => SELECT-VALUE
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
