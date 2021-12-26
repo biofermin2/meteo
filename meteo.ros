@@ -19,10 +19,6 @@ exec ros -Q -- $0 "$@"
   "https://www.jma.go.jp/bosai/common/const/area.json"
   "エリア情報のJSONデータ")		; => AREA-URL
 
-(defconstant url-base
-  "https://www.jma.go.jp/bosai/forecast/data/forecast/"
-  "予報データのURLベース")		; => URL-BASE
-
 (defparameter area-info nil)		; => AREA-INFO
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
 (defparameter local-data nil)		; => LOCAL-DATA
@@ -87,17 +83,18 @@ exec ros -Q -- $0 "$@"
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
 
+
 (defun local-info (muni)
-  (multiple-value-bind (prefs local)
-      (upper-codes muni)
-    (sets local-data
-	  (seek local (parse (dex:get (format nil "~a~a.json" url-base prefs))) 1))
-    (let ((d (read-from-string (car local-data))))
-      (format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
-					 (getf d 'weathers))))))) ; => LOCAL-INFO
+  (let ((base-url "https://www.jma.go.jp/bosai/forecast/data/forecast/"))
+    (multiple-value-bind (prefs local)
+	(upper-codes muni)
+      (sets local-data
+	    (seek local (parse (dex:get (format nil "~a~a.json" base-url prefs))) 1))
+      (let ((d (read-from-string (car local-data))))
+	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
+					   (getf d 'weathers)))))))) ; => 
 
 ;; weather map 
-(defconstant base-url2	"https://www.jma.go.jp/bosai/weather_map/data/png/") ; => BASE-URL2
 (defparameter now-list nil)						     ; => NOW-LIST
 
 (defun today ()
@@ -118,15 +115,16 @@ exec ros -Q -- $0 "$@"
      ,@body))				; => SET-READTABLE
 
 (defun png-url (n)
-  (format nil "~a~a"
-   base-url2
-   (car (set-readtable :preserve
-	  (last (read-from-string
-		 (cond ((eq n 1) (first now-list))
-		       ((eq n 2) (second now-list))
-		       ((eq n 3) (third now-list))
-		       ((eq n 4) (fourth now-list))
-		       (t (error "put number 1〜4"))))))))) ; => PNG-URL
+  (let ((base-url "https://www.jma.go.jp/bosai/weather_map/data/png/"))
+    (format nil "~a~a"
+	    base-url
+	    (car (set-readtable :preserve
+				(last (read-from-string
+				       (cond ((eq n 1) (first now-list))
+					     ((eq n 2) (second now-list))
+					     ((eq n 3) (third now-list))
+					     ((eq n 4) (fourth now-list))
+					     (t (error "put number 1〜4")))))))))) ; => PNG-URL
 
 (defun download-file (uri &optional (filename "./"))
   (with-open-file (out filename :direction :output
