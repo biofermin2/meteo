@@ -227,6 +227,8 @@ PARENTナンバー＞漢字＞頭文字が大文字のアルファベット＞�
 [Common Lispで天気予報スクリプトを作ってみた〜気象庁編〜](https://qiita.com/biofermin2/items/22634286290e779c36d5)
 
 ### update history
+[2021-12-26] 0.1.9 対象外のエリアへのエラーメッセージ追加。base-urlを２つのグローバル変数からそれぞれ同じ名前のローカル変数に変更。
+
 [2021-12-20] 0.1.8 ハッシュテーブルを導入、select-infoをselect-valueに改める。
 
 [2021-12-19] 0.1.7 select-infoの追加。area-infoの選択をわかりやすくする。
