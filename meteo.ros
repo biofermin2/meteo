@@ -14,14 +14,11 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defparameter version "0.1.9")		; => VERSION
-(defparameter area-url
-  "https://www.jma.go.jp/bosai/common/const/area.json"
-  "エリア情報のJSONデータ")		; => AREA-URL
+(defconstant version "0.1.9")		; => VERSION
 
-(defparameter area-info nil)		; => AREA-INFO
+(defvar area-info)		; => AREA-INFO
+(defvar local-data)		; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
-(defparameter local-data nil)		; => LOCAL-DATA
 
 (defparameter w-code-plist
       '(100 ☼ 101 ☼☁ 102 ☼☔ 103 ☼☔ 104 ☼☃ 105 ☼☃ 106 ☼☔ 107 ☼☔ 108 ☼☔  110 ☼→☁ 111 ☼→☁ 112 ☼→☔ 113 ☼→☔ 114 ☼→☔ 115 ☼→☃ 116 ☼→☃ 117 ☼→☃ 118 ☼→☔ 119 ☼→☔ 120 ☼☔ 121 ☼☔ 122 ☼→☔ 123 ☼ 124 ☼ 125 ☼→☔ 126 ☼→☔ 127 ☼→☔ 128 ☼→☔ 130 ☼ 131 ☼ 132 ☼☁ 140 ☼☔ 160 ☼☃ 170 ☼☃ 181 ☼→☃
@@ -61,9 +58,11 @@ exec ros -Q -- $0 "$@"
 	    :do (format *query-io* "~d: ~s~%" k v)
 	    :finally (format *query-io* "select a number[1-~d]" cnt)))) ; => SELECT-VALUE
 
+
 (defun upper-codes (muni)
   "put only Municipality as argument"
-  (let ((area-json (parse (dex:get area-url))))
+  (let* ((url "https://www.jma.go.jp/bosai/common/const/area.json")
+	 (area-json (parse (dex:get url))))
     (sets area-info (seek muni area-json))
     (puts-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
@@ -79,7 +78,6 @@ exec ros -Q -- $0 "$@"
 	  ((= prefs-code 011000) (setq local-code prefs-code))) 
     (values (format nil "~6,'0d" prefs-code)
 	    (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
-
 
 (defun code->sym (code)
   "change from weather code to symbol mark"
@@ -97,7 +95,7 @@ exec ros -Q -- $0 "$@"
 					   (getf d 'weathers)))))))) ; => 
 
 ;; weather map 
-(defparameter now-list nil)						     ; => NOW-LIST
+(defvar now-list)						     ; => NOW-LIST
 
 (defun today ()
   "現在日付の取得"
