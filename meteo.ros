@@ -126,7 +126,7 @@ exec ros -Q -- $0 "$@"
 					     ((eq n 4) (fourth now-list))
 					     (t (error "put number 1〜4")))))))))) ; => PNG-URL
 
-(defun download-file (uri &optional (filename "./"))
+(defun download-file (uri &optional (filename))
   (with-open-file (out filename :direction :output
                        :if-exists :supersede
                        :element-type '(unsigned-byte 8))
@@ -206,7 +206,7 @@ output to *verbose-out*.  Returns the shell's exit code."
       ((string= 1st "-t")
        (let ((png-file (out-png-name 2nd)))
 	 (download-file (png-url (parse-integer 2nd)) png-file)
-	 ;;(system (format nil "xdg-open ~a~a" (user-homedir-pathname) png-file)) ;need sxiv,you can choose another viewer as you like instead of it.
+	 ;;(system (format nil "xdg-open ~a~a" (truename "./") png-file)) 
 	 ))
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
