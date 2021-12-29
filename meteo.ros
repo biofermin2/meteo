@@ -114,7 +114,7 @@ exec ros -Q -- $0 "$@"
      (setf (readtable-case *readtable*) ,opt)
      ,@body))				; => SET-READTABLE
 
-(defun png-url (n)
+(defun map-url (n)
   (let ((base-url "https://www.jma.go.jp/bosai/weather_map/data/png/"))
     (format nil "~a~a"
 	    base-url
@@ -124,7 +124,8 @@ exec ros -Q -- $0 "$@"
 					     ((eq n 2) (second now-list))
 					     ((eq n 3) (third now-list))
 					     ((eq n 4) (fourth now-list))
-					     (t (error "put number 1〜4")))))))))) ; => PNG-URL
+					     (t (error "put number 1〜4")))))))))) ; => MAP-URL
+
 
 (defun download-file (uri &optional (filename))
   (with-open-file (out filename :direction :output
@@ -143,6 +144,55 @@ exec ros -Q -- $0 "$@"
 		((string= n "3") "around-Japan-mono")
 		((string= n "4") "around-Japan-color")))
     (format nil "~a-~a~a" prefix (today) ".png"))) ; => OUT-PNG-NAME
+
+;; satellite image
+
+(defun band/prod (n)
+  "画像の種類を選択します"
+  (cond ((= n 1) "B13/TBB") ;赤外画像
+	((= n 2) "B03/ALBD") ;可視画像
+	((= n 3) "B08/TBB") ;水蒸気画像
+	((= n 4) "REP/ETC") ;true color再現画像
+	((= n 5) "SND/ETC") ;雲頂強調画像
+	(t (error "select number [1-5]")))) ; => BAND/PROD
+
+(defun center-pt (z)
+  (expt 2 (+ z 7)))			; => CENTER-PT
+
+(defun total-px (z)
+  (* (center-pt z) 2))			; => TOTAL-PX
+
+(defun px/lngdeg (z)
+  (/ (total-px z) 360))			; => PX/LNGDEG
+
+(defun long->x (long z)
+  (truncate (/ (+ (center-pt z) (* long (px/lngdeg z)) 0.5) 256))) ; => LONG->X
+
+(defun px/lngrad (z)
+  (/ (total-px z) (* 2 pi)))		; => PX/LNGRAD
+
+(defun siny (lat)
+  (min (max (sin (* lat (/ pi 180))) -0.9999) 0.9999)) ; => SINY
+
+(defun lat->y (lat z)
+  (truncate
+   (/ (+ 0.5 (- (center-pt z)
+			 (* 0.5 (log (/ (+ 1 (siny lat))
+					(- 1 (siny lat))))
+			    (px/lngrad z)))) 256))) ; => LAT->Y
+
+(defun sat-url (n z long lat)
+  "zはzoomレベル3-5のいずれかを選択する。"
+  (let* ((base-url "https://www.jma.go.jp/bosai/himawari/data/satimg/")
+	(latest-times
+	  (car (last (parse (dex:get (format nil "~a~a" base-url "targetTimes_fd.json")))))))
+    (multiple-value-bind (bt vt)
+	(values (getf latest-times :|basetime|)
+		(getf latest-times :|validtime|))
+      (format nil "~a~a/fd/~a/~a/~a/~a/~a.jpg"
+	      base-url bt vt (band/prod n) z (long->x long z) (lat->y lat z))))) ; => SAT-URL
+
+
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
@@ -191,9 +241,12 @@ output to *verbose-out*.  Returns the shell's exit code."
     #+clisp             ;XXX not exactly *verbose-out*, I know
     (ext:run-shell-command  command :output :terminal :wait t)
     ))					; => SYSTEM
-	
+
 (defun main (&rest argv)
   (declare (ignorable argv))
+  (sets now-list
+      (seek "now"
+	    (parse (dex:get "https://www.jma.go.jp/bosai/weather_map/data/list.json") :as :alist)))
   (let ((1st (car argv))
 	(2nd (cadr argv)))
     (cond
@@ -205,8 +258,8 @@ output to *verbose-out*.  Returns the shell's exit code."
        (format t print-help))
       ((string= 1st "-t")
        (let ((png-file (out-png-name 2nd)))
-	 (download-file (png-url (parse-integer 2nd)) png-file)
-	 ;;(system (format nil "xdg-open ~a~a" (truename "./") png-file)) 
+	 (download-file (map-url (parse-integer 2nd)) png-file)
+	 (system (format nil "sxiv ~a~a" (truename "./") png-file))
 	 ))
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
@@ -215,5 +268,6 @@ output to *verbose-out*.  Returns the shell's exit code."
 	       ((or (string= 2nd "-a")
 		    (string= 2nd "--area-info"))
 		(format t "~s" area-info))))))) ; => MAIN
+
 
 ;;; vim: set ft=lisp lisp:
