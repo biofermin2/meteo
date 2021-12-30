@@ -14,7 +14,8 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.0")		; => VERSION
+(defconstant version "0.2.1")		; => VERSION
+(defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)		; => AREA-INFO
 (defvar local-data)		; => LOCAL-DATA
@@ -61,8 +62,8 @@ exec ros -Q -- $0 "$@"
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
-  (let* ((url "https://www.jma.go.jp/bosai/common/const/area.json")
-	 (area-json (parse (dex:get url))))
+  (let* ((url-bot "common/const/area.json")
+	 (area-json (parse (dex:get (format nil "~a~a" url-top url-bot)))))
     (sets area-info (seek muni area-json))
     (puts-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
@@ -73,26 +74,27 @@ exec ros -Q -- $0 "$@"
 	 (code (getf (read-from-string info) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
+    (setf area-info info)
     (cond ((or (= prefs-code 460000)
 	       (= prefs-code 014000)) (incf prefs-code 100))
 	  ((= prefs-code 011000) (setq local-code prefs-code))) 
     (values (format nil "~6,'0d" prefs-code)
 	    (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
+
 (defun code->sym (code)
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
 
-
 (defun local-info (muni)
-  (let ((base-url "https://www.jma.go.jp/bosai/forecast/data/forecast/"))
+  (let ((url-mid "forecast/data/forecast/"))
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (sets local-data
-	    (seek local (parse (dex:get (format nil "~a~a.json" base-url prefs))) 1))
+	    (seek local (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs))) 1))
       (let ((d (read-from-string (car local-data))))
 	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
-					   (getf d 'weathers)))))))) ; => 
+					   (getf d 'weathers)))))))) ; => LOCAL-INFO
 
 ;; weather map 
 (defvar now-list)						     ; => NOW-LIST
@@ -115,9 +117,10 @@ exec ros -Q -- $0 "$@"
      ,@body))				; => SET-READTABLE
 
 (defun map-url (n)
-  (let ((base-url "https://www.jma.go.jp/bosai/weather_map/data/png/"))
-    (format nil "~a~a"
-	    base-url
+  (let ((url-mid "weather_map/data/png/"))
+    (format nil "~a~a~a"
+	    url-top
+	    url-mid
 	    (car (set-readtable :preserve
 				(last (read-from-string
 				       (cond ((eq n 1) (first now-list))
@@ -196,8 +199,8 @@ exec ros -Q -- $0 "$@"
 (defun lon/lat (muni)
   (let* ((amedas)
 	 (name (rm-last-char muni))
-	 (base-url "https://www.jma.go.jp/bosai/amedas/const/")
-	 (amedas-data (parse (dex:get (format nil "~a~a" base-url "amedastable.json")))))
+	 (url-mid "amedas/const/")
+	 (amedas-data (parse (dex:get (format nil "~a~a~a" url-top url-mid "amedastable.json")))))
     (sets amedas (seek name amedas-data))
     (values (car (getf (read-from-string (car amedas)) 'lon))
 	    (car (getf (read-from-string (car amedas)) 'lat))))) ; => LON/LAT
@@ -206,14 +209,15 @@ exec ros -Q -- $0 "$@"
   "zはzoomレベル6固定"
   (multiple-value-bind (lon lat)
       (lon/lat muni)
-    (let* ((base-url "https://www.jma.go.jp/bosai/himawari/data/satimg/")
+    (let* ((url-mid "himawari/data/satimg/")
 	   (latest-times
-	     (car (last (parse (dex:get (format nil "~a~a" base-url "targetTimes_jp.json")))))))
+	     (car (last (parse (dex:get (format nil "~a~a~a" url-top url-mid "targetTimes_jp.json")))))))
       (multiple-value-bind (bt vt)
 	  (values (getf latest-times :|basetime|)
 		  (getf latest-times :|validtime|))
-	(format nil "~a~a/jp/~a/~a/~a/~a/~a.jpg"
-		base-url bt vt (band/prod n) z (lon->x lon z) (lat->y lat z)))))) ; => SAT-URL
+	(format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
+		url-top url-mid bt vt (band/prod n) z (lon->x lon z) (lat->y lat z)))))) ; => SAT-URL
+
 
 (defun sat-img-name (prefix)
   (format nil "~a-~a~a" prefix (today) ".jpg")) ; => SAT-IMG-NAME
@@ -273,11 +277,13 @@ output to *verbose-out*.  Returns the shell's exit code."
     (ext:run-shell-command  command :output :terminal :wait t)
     ))					; => SYSTEM
 
+
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (sets now-list
-      (seek "now"
-	    (parse (dex:get "https://www.jma.go.jp/bosai/weather_map/data/list.json") :as :alist)))
+  (let ((url-bot "weather_map/data/list.json"))
+    (sets now-list
+	  (seek "now"
+		(parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist))))
   (let ((1st (first argv))
 	(2nd (second argv))
 	(3rd (parse-integer (third argv))))
@@ -303,8 +309,6 @@ output to *verbose-out*.  Returns the shell's exit code."
 		    (string= 2nd "--satellite"))
 		(download-file (sat-url 1st 3rd) (sat-img-name prefix))
 		(system (format nil "xdg-open ~a~a" (truename "./") (sat-img-name prefix))))))))) ; => MAIN
-
-
 
 
 ;;; vim: set ft=lisp lisp:
