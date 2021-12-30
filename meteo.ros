@@ -224,7 +224,7 @@ usage: $ meteo <your municipality in Chinese character>
 option:
   -v, --version     print version
   -h, --help        print help
-  -t <number:1〜4>  download weather map png file
+  -t <number:1〜4>  download weather map file
      1: asia-pacific region monochrome
      2: asia-pacific region color
      3: around Japan monochrome
@@ -233,11 +233,18 @@ option:
 usage: $ meteo <option>
 
 sub option:
-  -d, --detail      print detail info
-  -a, --area-info   print area info
+  -d, --detail                    print detail info
+  -a, --area-info                 print area info
+  -s <number:1〜5>, --satellite   download satellite image
+     1:inframed image
+     2:visible image
+     3:water-vapor image
+     4:truecolor image
+     5:cloud-top image
 
 usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
+
 
 
 (defun system (control-string &rest args)
