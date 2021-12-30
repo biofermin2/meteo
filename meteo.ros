@@ -280,7 +280,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 	    (parse (dex:get "https://www.jma.go.jp/bosai/weather_map/data/list.json") :as :alist)))
   (let ((1st (first argv))
 	(2nd (second argv))
-	(3rd (third argv)))
+	(3rd (parse-integer (third argv))))
     (cond
       ((or (string= 1st "--version")
 	   (string= 1st "-v"))
@@ -301,7 +301,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 		(format t "~s" area-info))
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
-		(download-file (sat-url 1st (parse-integer 3rd)) (sat-img-name prefix))
+		(download-file (sat-url 1st 3rd) (sat-img-name prefix))
 		(system (format nil "xdg-open ~a~a" (truename "./") (sat-img-name prefix))))))))) ; => MAIN
 
 
