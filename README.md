@@ -64,7 +64,7 @@ the usage of the options is as follows.
 
 オプションの使い方は下記の通りです。
 
-help
+### help
 
 ヘルプの表示
 
@@ -72,14 +72,14 @@ help
 $ meteo -h
 ```
 
-version info
+### version info
 
 バージョン情報の表示
 
 ```shell
 $ meteo -v
 ```
-get weather maps
+### weather maps
 
 各種天気図の取得
 
@@ -125,7 +125,7 @@ The sub-options are also used as follows.
 
 また、サブオプションは下記のように使います。
 
-detail info
+### detail info
 
 詳細情報の表示
 
@@ -133,7 +133,7 @@ detail info
 $ meteo <municipality> -d
 ```
 
-area info
+### area info
 
 エリア情報の表示
 
@@ -222,11 +222,45 @@ PARENTナンバー＞漢字＞頭文字が大文字のアルファベット＞�
 
 エラーとなります。
 
+### satellite image
+
+衛星画像の取得
+
+```shell
+$ meteo <municipality> -s n
+```
+n means number. you should select a number from the below.
+
+     1:inframed image
+    
+     2:visible image
+     
+     3:water-vapor image
+     
+     4:truecolor image
+     
+     5:cloud-top image
+
+nは数字を表します。以下の中から希望の数値を選択して下さい。
+
+    1:赤外線画像
+    
+    2:可視画像
+    
+    3:水蒸気画像
+    
+    4:truecolor再現画像
+    
+    5:雲頂強調画像
+  
+
 その他捕捉記事はqiitaにもまとめたので、もしよろしければご参照下さい。
 
 [Common Lispで天気予報スクリプトを作ってみた〜気象庁編〜](https://qiita.com/biofermin2/items/22634286290e779c36d5)
 
 ### update history
+[2021-12-30] 0.2.0 ひまわり衛星画像を表示出来るように機能追加。
+
 [2021-12-26] 0.1.9 対象外のエリアへのエラーメッセージ追加。base-urlを２つのグローバル変数からそれぞれ同じ名前のローカル変数に変更。
 
 [2021-12-20] 0.1.8 ハッシュテーブルを導入、select-infoをselect-valueに改める。
