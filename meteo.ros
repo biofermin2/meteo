@@ -147,6 +147,7 @@ exec ros -Q -- $0 "$@"
 
 ;; satellite image
 (defvar prefix)				; => PREFIX
+
 (defun band/prod (n)
   "画像の種類を選択します"
   (let (b/p)
@@ -214,6 +215,8 @@ exec ros -Q -- $0 "$@"
 	(format nil "~a~a/jp/~a/~a/~a/~a/~a.jpg"
 		base-url bt vt (band/prod n) z (lon->x lon z) (lat->y lat z)))))) ; => SAT-URL
 
+(defun sat-img-name (prefix)
+  (format nil "~a-~a~a" prefix (today) ".jpg")) ; => SAT-IMG-NAME
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
