@@ -86,25 +86,25 @@ $ meteo -v
 ```shell
 $ meteo -t number ;(number:1〜4)
 ```
-1: asia-pacific region monochrome
+　　　1: asia-pacific region monochrome
 
-2: asia-pacific region color
+　　　2: asia-pacific region color
 
-3: around Japan monochrome
+　　　3: around Japan monochrome
 
-4: around Japan color
+　　　4: around Japan color
 
 it starts download above weather map png file.
 
 then you can check it by your favorite viewer.
 
-1:アジア太平洋域（白黒）
+　　　1:アジア太平洋域（白黒）
 
-2:アジア太平洋域（カラー）
+　　　2:アジア太平洋域（カラー）
 
-3:日本周辺（白黒）
+　　　3:日本周辺（白黒）
 
-4:日本周辺（カラー）
+　　　4:日本周辺（カラー）
 
 上記の天気図をダウンロードします。
 
