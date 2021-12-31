@@ -233,7 +233,7 @@ exec ros -Q -- $0 "$@"
 	     (car (parse (dex:get
 			  (format nil "~a~a~a" url-top url-mid "targetTimes_N1.json"))
 			 :as :alist)))
-	   (gsi-url "https://cyberjapandata.gsi.go.jp/xyz/std/")
+	   (gsi-url "https://cyberjapandata.gsi.go.jp/xyz/relief/")
 	   (x (lon->x lon z))
 	   (y (lat->y lat z))
 	   (nowcast-layer)
