@@ -222,6 +222,37 @@ exec ros -Q -- $0 "$@"
 (defun sat-img-name (prefix)
   (format nil "~a-~a~a" prefix (today) ".jpg")) ; => SAT-IMG-NAME
 
+
+;; nowcast image
+(defun show-nowcast (muni &optional (z 6))
+  "z (ズームレベル) は 4～10"
+  (multiple-value-bind (lon lat)
+      (lon/lat muni)
+    (let* ((url-mid "jmatile/data/nowc/")
+	   (latest-time
+	     (car (parse (dex:get
+			  (format nil "~a~a~a" url-top url-mid "targetTimes_N1.json"))
+			 :as :alist)))
+	   (gsi-url "https://cyberjapandata.gsi.go.jp/xyz/std/")
+	   (x (lon->x lon z))
+	   (y (lat->y lat z))
+	   (nowcast-layer)
+	   (map-layer)
+	   (rain-file (format nil "~a~a" (truename "./") "rain.png"))
+	   (map-file (format nil "~a~a" (truename "./") "map.png"))
+	   (out-file (format nil "nowcast-~a-~a.png" (today) z)))
+      (multiple-value-bind (bt vt)
+	  (values (aget latest-time "basetime")
+		  (aget latest-time "validtime"))
+	(setf nowcast-layer (format nil "~a~a~a/none/~a/surf/hrpns/~a/~a/~a.png"
+				    url-top url-mid bt vt z x y))
+	(setf map-layer (format nil "~a~a/~a/~a.png" gsi-url z x y))
+	(download-file nowcast-layer rain-file)
+	(download-file map-layer map-file)
+	(system (format nil "~a ~a ~a ~a" "composite -compose over" rain-file map-file out-file))
+	(system (format nil "xdg-open ~a~a" (truename "./") out-file)))))) ; => SHOW-NOWCAST
+
+
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
 and print it on your command line.
@@ -242,16 +273,17 @@ usage: $ meteo <option>
 sub option:
   -d, --detail                    print detail info
   -a, --area-info                 print area info
-  -s <number:1〜5>, --satellite   download satellite image
+  -s <number:1〜5>, --satellite   show satellite image
      1:inframed image
      2:visible image
      3:water-vapor image
      4:truecolor image
      5:cloud-top image
+  -n <number:2〜8>, --nowcast     show nowcast image
+    number means zoom level. recommend is 6.
 
 usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
-
 
 
 (defun system (control-string &rest args)
@@ -276,7 +308,6 @@ output to *verbose-out*.  Returns the shell's exit code."
     #+clisp             ;XXX not exactly *verbose-out*, I know
     (ext:run-shell-command  command :output :terminal :wait t)
     ))					; => SYSTEM
-
 
 (defun main (&rest argv)
   (declare (ignorable argv))
@@ -308,7 +339,10 @@ output to *verbose-out*.  Returns the shell's exit code."
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
 		(download-file (sat-url 1st 3rd) (sat-img-name prefix))
-		(system (format nil "xdg-open ~a~a" (truename "./") (sat-img-name prefix))))))))) ; => MAIN
+		(system (format nil "xdg-open ~a~a" (truename "./") (sat-img-name prefix))))
+	       ((or (string= 2nd "-n")
+		    (string= 2nd "--nowcast"))
+		(show-nowcast 1st 3rd))))))) ; => MAIN
 
 
 ;;; vim: set ft=lisp lisp:
