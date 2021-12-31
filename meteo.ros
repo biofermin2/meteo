@@ -5,16 +5,16 @@ exec ros -Q -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  #+quicklisp(ql:quickload '(:unio :dexador :jonathan) :silent t) 
-  )					; => (:UNIO :DEXADOR :JONATHAN)
+  #+quicklisp(ql:quickload '(:unio :assoc-utils :dexador :jonathan) :silent t) 
+  )					
 
 (defpackage :ros.script.meteo.3845973535
-  (:use :cl :unio :dexador :jonathan)
+  (:use :cl :unio :dexador :jonathan :assoc-utils)
   (:shadow :delete :get)
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.1")		; => VERSION
+(defconstant version "0.2.2")		; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)		; => AREA-INFO
