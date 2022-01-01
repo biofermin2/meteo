@@ -148,6 +148,11 @@ exec ros -Q -- $0 "$@"
 		((string= n "4") "around-Japan-color")))
     (format nil "~a-~a~a" prefix (today) ".png"))) ; => MAP-NAME
 
+(defun show-weather-map (n)
+  (let ((out-file (map-name n)))
+    (download-file (map-url (parse-integer n)) out-file)
+    (system (format nil "xdg-open ~a~a" (truename "./") out-file)))) ; => SHOW-WEATHER-MAP
+
 ;; satellite image
 (defun center-pt (z)
   (expt 2 (+ z 7)))			; => CENTER-PT
@@ -306,6 +311,7 @@ output to *verbose-out*.  Returns the shell's exit code."
     (ext:run-shell-command  command :output :terminal :wait t)
     ))					; => SYSTEM
 
+
 (defun main (&rest argv)
   (declare (ignorable argv))
   (let ((url-bot "weather_map/data/list.json"))
@@ -314,7 +320,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 		(parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist))))
   (let ((1st (first argv))
 	(2nd (second argv))
-	(3rd (parse-integer (third argv))))
+	(3rd (third argv)))
     (cond
       ((or (string= 1st "--version")
 	   (string= 1st "-v"))
@@ -323,9 +329,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 	   (string= 1st "-h"))
        (format t print-help))
       ((string= 1st "-t")
-       (let ((png-file (map-name 2nd)))
-	 (download-file (map-url (parse-integer 2nd)) png-file)
-	 (system (format nil "xdg-open ~a~a" (truename "./") png-file))))
+       (show-weather-map 2nd))
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
 		    (string= 2nd "--detail"))
@@ -335,10 +339,11 @@ output to *verbose-out*.  Returns the shell's exit code."
 		(format t "~s" area-info))
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
-		(show-sat-img 1st 3rd))
+		(show-sat-img 1st (parse-integer 3rd)))
 	       ((or (string= 2nd "-n")
 		    (string= 2nd "--nowcast"))
-		(show-nowcast 1st 3rd))))))) ; => MAIN
+		(show-nowcast 1st (parse-integer 3rd)))))))) ; => MAIN
+
 
 
 ;;; vim: set ft=lisp lisp:
