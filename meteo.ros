@@ -149,24 +149,6 @@ exec ros -Q -- $0 "$@"
     (format nil "~a-~a~a" prefix (today) ".png"))) ; => MAP-NAME
 
 ;; satellite image
-(defvar prefix)				; => PREFIX
-
-(defun band/prod (n)
-  "画像の種類を選択します"
-  (let (b/p)
-    (cond ((= n 1) (setq prefix "infrared"
-			 b/p "B13/TBB")) ;赤外画像
-	  ((= n 2) (setq prefix "visible"
-			 b/p "B03/ALBD")) ;可視画像
-	  ((= n 3) (setq prefix "water-vapor"
-			 b/p "B08/TBB")) ;水蒸気画像
-	  ((= n 4) (setq prefix "truecolor"
-			 b/p "REP/ETC")) ;true color再現画像
-	  ((= n 5) (setq prefix "cloud-top"
-			 b/p "SND/ETC")) ;雲頂強調画像
-	  (t (error "select number [1-5]"))))) ; => BAND/PROD
-
-
 (defun center-pt (z)
   (expt 2 (+ z 7)))			; => CENTER-PT
 
@@ -200,28 +182,43 @@ exec ros -Q -- $0 "$@"
   (let* ((amedas)
 	 (name (rm-last-char muni))
 	 (url-mid "amedas/const/")
-	 (amedas-data (parse (dex:get (format nil "~a~a~a" url-top url-mid "amedastable.json")))))
+	 (amedas-data (parse (dex:get (format nil "~a~aamedastable.json" url-top url-mid)))))
     (sets amedas (seek name amedas-data))
     (values (car (getf (read-from-string (car amedas)) 'lon))
 	    (car (getf (read-from-string (car amedas)) 'lat))))) ; => LON/LAT
 
-(defun sat-url (muni n &optional (z 6))
+(defun show-sat-img (muni n)
   "zはzoomレベル6固定"
-  (multiple-value-bind (lon lat)
-      (lon/lat muni)
-    (let* ((url-mid "himawari/data/satimg/")
-	   (latest-times
-	     (car (last (parse (dex:get (format nil "~a~a~a" url-top url-mid "targetTimes_jp.json")))))))
-      (multiple-value-bind (bt vt)
-	  (values (getf latest-times :|basetime|)
-		  (getf latest-times :|validtime|))
-	(format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
-		url-top url-mid bt vt (band/prod n) z (lon->x lon z) (lat->y lat z)))))) ; => SAT-URL
-
-
-(defun sat-img-name (prefix)
-  (format nil "~a-~a~a" prefix (today) ".jpg")) ; => SAT-IMG-NAME
-
+  (let ((prefix)
+	(b/p))
+    (cond ((= n 1) (setq prefix "infrared"
+			 b/p "B13/TBB")) ;赤外画像
+	  ((= n 2) (setq prefix "visible"
+			 b/p "B03/ALBD")) ;可視画像
+	  ((= n 3) (setq prefix "water-vapor"
+			 b/p "B08/TBB")) ;水蒸気画像
+	  ((= n 4) (setq prefix "truecolor"
+			 b/p "REP/ETC")) ;true color再現画像
+	  ((= n 5) (setq prefix "cloud-top"
+			 b/p "SND/ETC")) ;雲頂強調画像
+	  (t (error "select number [1-5]")))
+    (multiple-value-bind (lon lat)
+		       (lon/lat muni)
+		       (let* ((url-mid "himawari/data/satimg/")
+			      (latest-time
+			       (car (last (parse (dex:get
+						  (format nil "~a~atargetTimes_jp.json" url-top url-mid))))))
+			      (z 6)
+			      (x (lon->x lon z))
+			      (y (lat->y lat z))
+			      (out-file (format nil "~a-~a.jpg" prefix (today))))
+			 (multiple-value-bind (bt vt)
+					      (values (getf latest-time :|basetime|)
+						      (getf latest-time :|validtime|))
+					      (download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
+								     url-top url-mid bt vt b/p z x y)
+							     out-file)
+					      (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => SHOW-SAT-IMG
 
 ;; nowcast image
 (defun show-nowcast (muni &optional (z 6))
@@ -338,8 +335,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 		(format t "~s" area-info))
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
-		(download-file (sat-url 1st 3rd) (sat-img-name prefix))
-		(system (format nil "xdg-open ~a~a" (truename "./") (sat-img-name prefix))))
+		(show-sat-img 1st 3rd))
 	       ((or (string= 2nd "-n")
 		    (string= 2nd "--nowcast"))
 		(show-nowcast 1st 3rd))))))) ; => MAIN
