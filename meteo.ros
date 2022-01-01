@@ -38,6 +38,30 @@ exec ros -Q -- $0 "$@"
   (force-output *query-io*)
   (read-line *query-io*))		; => PROMPT-READ
 
+(defun system (control-string &rest args)
+;; copy from somewhere on internet. sorry, I forgot.
+  "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
+synchronously execute the result using a Bourne-compatible shell, with
+output to *verbose-out*.  Returns the shell's exit code."
+  (let ((command (apply #'format nil control-string args)))
+    (format t "; $ ~A~%" command)
+    #+sbcl
+    (sb-impl::process-exit-code
+     (sb-ext:run-program
+      "/usr/bin/zsh"
+      (list  "-c" command)
+      :input nil :output *standard-output*))
+    #+(or cmu scl)
+    (ext:process-exit-code
+     (ext:run-program
+      "/bin/sh"
+      (list  "-c" command)
+      :input nil :output *verbose-out*))
+    #+clisp             ;XXX not exactly *verbose-out*, I know
+    (ext:run-shell-command  command :output :terminal :wait t)
+    ))					; => SYSTEM
+
+
 (defun put-ht (k v ht)
   (setf (gethash k ht) v))		; => PUT-HT
 
@@ -58,7 +82,6 @@ exec ros -Q -- $0 "$@"
 	      :using (hash-value v)
 	    :do (format *query-io* "~d: ~s~%" k v)
 	    :finally (format *query-io* "select a number[1-~d]" cnt)))) ; => SELECT-VALUE
-
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
@@ -288,30 +311,6 @@ usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
 
 
-(defun system (control-string &rest args)
-	;; copy from somewhere. sorry, I forgot.
-  "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
-synchronously execute the result using a Bourne-compatible shell, with
-output to *verbose-out*.  Returns the shell's exit code."
-  (let ((command (apply #'format nil control-string args)))
-    (format t "; $ ~A~%" command)
-    #+sbcl
-    (sb-impl::process-exit-code
-     (sb-ext:run-program
-      "/usr/bin/zsh"
-      (list  "-c" command)
-      :input nil :output *standard-output*))
-    #+(or cmu scl)
-    (ext:process-exit-code
-     (ext:run-program
-      "/bin/sh"
-      (list  "-c" command)
-      :input nil :output *verbose-out*))
-    #+clisp             ;XXX not exactly *verbose-out*, I know
-    (ext:run-shell-command  command :output :terminal :wait t)
-    ))					; => SYSTEM
-
-
 (defun main (&rest argv)
   (declare (ignorable argv))
   (let ((url-bot "weather_map/data/list.json"))
@@ -343,7 +342,5 @@ output to *verbose-out*.  Returns the shell's exit code."
 	       ((or (string= 2nd "-n")
 		    (string= 2nd "--nowcast"))
 		(show-nowcast 1st (parse-integer 3rd)))))))) ; => MAIN
-
-
 
 ;;; vim: set ft=lisp lisp:
