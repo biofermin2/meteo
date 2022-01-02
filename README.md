@@ -84,7 +84,7 @@ $ meteo -v
 各種天気図の取得
 
 ```shell
-$ meteo -t number ;(number:1〜4)
+$ meteo -m number ;(number:1〜4)
 ```
 
      1: asia-pacific region monochrome
@@ -268,12 +268,14 @@ nは数字を表します。以下の中から希望の数値を選択して下�
 $ meteo <municipality> -n z
 ;; z is zoom level number 2〜8
 ```
+zoomレベルによっては、エラーが出る場合もあります。6あたりがオススメです。
 
 その他捕捉記事はqiitaにもまとめたので、もしよろしければご参照下さい。
 
 [Common Lispで天気予報スクリプトを作ってみた〜気象庁編〜](https://qiita.com/biofermin2/items/22634286290e779c36d5)
 
 ### update history
+
 [2021-12-31] 0.2.2 ナウキャスト画像表示機能追加。
 
 [2021-12-31] 0.2.1 URLまわりの修正。
