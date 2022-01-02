@@ -120,8 +120,6 @@ output to *verbose-out*.  Returns the shell's exit code."
 					   (getf d 'weathers)))))))) ; => LOCAL-INFO
 
 ;; weather map 
-(defvar now-list)						     ; => NOW-LIST
-
 (defun today ()
   "現在日付の取得"
   (multiple-value-bind (s m h dd mm yy)
@@ -129,29 +127,30 @@ output to *verbose-out*.  Returns the shell's exit code."
     (declare (ignore s m h))
     (format nil "~4,'0D-~2,'0D-~2,'0D" yy mm dd)))
 
-(sets now-list
-      (seek "now"
-	    (parse (dex:get "https://www.jma.go.jp/bosai/weather_map/data/list.json") :as :alist))) 
-
 (defmacro set-readtable (opt &body body)
   "opt:upcase,downcase,preserve,invert"
   `(let ((*readtable* (copy-readtable nil)))
      (setf (readtable-case *readtable*) ,opt)
      ,@body))				; => SET-READTABLE
 
+
 (defun map-url (n)
-  (let ((url-mid "weather_map/data/png/"))
+  (let ((url-mid "weather_map/data/png/")
+	(url-bot "weather_map/data/list.json")
+	(now-list))
+    (sets now-list
+	  (seek "now"
+		(parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist)))
     (format nil "~a~a~a"
 	    url-top
 	    url-mid
 	    (car (set-readtable :preserve
 				(last (read-from-string
-				       (cond ((eq n 1) (first now-list))
-					     ((eq n 2) (second now-list))
-					     ((eq n 3) (third now-list))
-					     ((eq n 4) (fourth now-list))
+				       (cond ((= n 1) (first now-list))
+					     ((= n 2) (second now-list))
+					     ((= n 3) (third now-list))
+					     ((= n 4) (fourth now-list))
 					     (t (error "put number 1〜4")))))))))) ; => MAP-URL
-
 
 (defun download-file (uri &optional (filename))
   (with-open-file (out filename :direction :output
@@ -277,7 +276,6 @@ output to *verbose-out*.  Returns the shell's exit code."
 	(system (format nil "~a ~a ~a ~a" "composite -compose over" rain-file map-file out-file))
 	(system (format nil "xdg-open ~a~a" (truename "./") out-file)))))) ; => SHOW-NOWCAST
 
-
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
 and print it on your command line.
@@ -285,9 +283,9 @@ and print it on your command line.
 usage: $ meteo <your municipality in Chinese character>
 
 option:
-  -v, --version     print version
-  -h, --help        print help
-  -t <number:1〜4>  download weather map file
+  -v, --version            print version
+  -h, --help               print help
+  -m <number:1〜4>, --map  download weather map file
      1: asia-pacific region monochrome
      2: asia-pacific region color
      3: around Japan monochrome
@@ -308,15 +306,10 @@ sub option:
     number means zoom level. recommend is 6.
 
 usage: $ meteo <municipality> <sub option>
-")					; => PRINT-HELP
-
+")
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (let ((url-bot "weather_map/data/list.json"))
-    (sets now-list
-	  (seek "now"
-		(parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist))))
   (let ((1st (first argv))
 	(2nd (second argv))
 	(3rd (third argv)))
@@ -327,7 +320,8 @@ usage: $ meteo <municipality> <sub option>
       ((or (string= 1st "--help")
 	   (string= 1st "-h"))
        (format t print-help))
-      ((string= 1st "-t")
+      ((or (string= 1st "-m")
+	   (string= 1st "--map"))
        (show-weather-map 2nd))
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
@@ -341,6 +335,6 @@ usage: $ meteo <municipality> <sub option>
 		(show-sat-img 1st (parse-integer 3rd)))
 	       ((or (string= 2nd "-n")
 		    (string= 2nd "--nowcast"))
-		(show-nowcast 1st (parse-integer 3rd)))))))) ; => MAIN
+		(show-nowcast 1st (parse-integer 3rd))))))))
 
 ;;; vim: set ft=lisp lisp:
