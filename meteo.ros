@@ -297,7 +297,7 @@ sub option:
   -d, --detail                    print detail info
   -a, --area-info                 print area info
   -s <number:1〜5>, --satellite   show satellite image
-     1:inframed image
+     1:infrared image
      2:visible image
      3:water-vapor image
      4:truecolor image
