@@ -266,16 +266,60 @@ nは数字を表します。以下の中から希望の数値を選択して下�
 ※ナウキャスト画像については国土地理院の地理院タイル画像を利用しております。
 
 ```shell
-$ meteo <municipality> -n z
+$ meteo <municipality> -n z [map-type]
 ;; z is zoom level number 2〜8
+;; map-type is optional argument
 ```
 zoomレベルによっては、エラーが出る場合もあります。6あたりがオススメです。
+
+map-typeに指定出来るのは以下の候補
+
+;; 地図の種類　map-type zoom-level
+
+;; 標準地図 std 5-18
+
+;; 淡色地図 pale 5-18
+
+;; English english 5-11
+
+;; 数値地図25000（土地条件） lcm25k_2012 10-16
+
+;; 土地条件図（初期整備版） lcm25k 14-16
+
+;; 沿岸海域土地条件図 ccm1 （平成元年以降） ccm2 （昭和63年以前） 14-16
+
+;; 白地図 blank 5-14
+
+;; x 写真 seamlessphoto 2-18
+
+;; 世界衛星モザイク画像 modis 2-8
+
+;; x 全国ランドサットモザイク画像 lndst 2-15
+
+;; 色別標高図 relief 5-15
+
+;; アナグリフ anaglyphmap_color anaglyphmap_gray 2-16
+
+;; 陰影起伏図 hillshademap 2-16
+
+;; 傾斜量図 slopemap 3-15
+
+;; 全国傾斜量区分図（雪崩関連） slopezone1map 3-15
+
+xは試してダメだったもの。
+
+詳細は以下の国土地理院タイル一覧ページ参照。
+
+https://maps.gsi.go.jp/development/ichiran.html
+
 
 その他捕捉記事はqiitaにもまとめたので、もしよろしければご参照下さい。
 
 [Common Lispで天気予報スクリプトを作ってみた〜気象庁編〜](https://qiita.com/biofermin2/items/22634286290e779c36d5)
 
 ### update history
+[2021-01-05] 0.2.4 ナウキャスト画像のベースマップ切り替えオプションの追加。
+
 [2022-01-02] 0.2.3 天気図まわりのリファクタリング。
 
 [2021-12-31] 0.2.2 ナウキャスト画像表示機能追加。
