@@ -14,7 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.3")		; => VERSION
+(defconstant version "0.2.4")		; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)		; => AREA-INFO
@@ -248,7 +248,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 					      (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => SHOW-SAT-IMG
 
 ;; nowcast image
-(defun show-nowcast (muni &optional (z 6))
+(defun show-nowcast (muni n &optional (map-type "relief"))
   "z (ズームレベル) は 4～10"
   (multiple-value-bind (lon lat)
       (lon/lat muni)
@@ -257,7 +257,8 @@ output to *verbose-out*.  Returns the shell's exit code."
 	     (car (parse (dex:get
 			  (format nil "~a~a~a" url-top url-mid "targetTimes_N1.json"))
 			 :as :alist)))
-	   (gsi-url "https://cyberjapandata.gsi.go.jp/xyz/relief/")
+	   (gsi-url "https://cyberjapandata.gsi.go.jp/xyz/")
+	   (z (parse-integer n))
 	   (x (lon->x lon z))
 	   (y (lat->y lat z))
 	   (nowcast-layer)
@@ -270,11 +271,11 @@ output to *verbose-out*.  Returns the shell's exit code."
 		  (aget latest-time "validtime"))
 	(setf nowcast-layer (format nil "~a~a~a/none/~a/surf/hrpns/~a/~a/~a.png"
 				    url-top url-mid bt vt z x y))
-	(setf map-layer (format nil "~a~a/~a/~a.png" gsi-url z x y))
+	(setf map-layer (format nil "~a~a/~a/~a/~a.png" gsi-url map-type z x y))
 	(download-file nowcast-layer nowcast-file)
 	(download-file map-layer map-file)
 	(system (format nil "~a ~a ~a ~a" "composite -compose over" nowcast-file map-file out-file))
-	(system (format nil "xdg-open ~a~a" (truename "./") out-file)))))) ; => SHOW-NOWCAST
+	(system (format nil "xdg-open ~a~a" (truename "./") out-file))))))
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
@@ -312,7 +313,8 @@ usage: $ meteo <municipality> <sub option>
   (declare (ignorable argv))
   (let ((1st (first argv))
 	(2nd (second argv))
-	(3rd (third argv)))
+	(3rd (third argv))
+	(4th (fourth argv)))
     (cond
       ((or (string= 1st "--version")
 	   (string= 1st "-v"))
@@ -332,9 +334,11 @@ usage: $ meteo <municipality> <sub option>
 		(format t "~s" area-info))
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
-		(show-sat-img 1st (parse-integer 3rd)))
+		(show-sat-img 1st 3rd))
 	       ((or (string= 2nd "-n")
 		    (string= 2nd "--nowcast"))
-		(show-nowcast 1st (parse-integer 3rd))))))))
+		(if 4th
+		    (show-nowcast 1st 3rd 4th)
+		    (show-nowcast 1st 3rd))))))))
 
 ;;; vim: set ft=lisp lisp:
