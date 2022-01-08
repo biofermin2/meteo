@@ -14,7 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.4")		; => VERSION
+(defconstant version "0.2.5")		; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)		; => AREA-INFO
@@ -238,7 +238,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 			      (z 6)
 			      (x (lon->x lon z))
 			      (y (lat->y lat z))
-			      (out-file (format nil "~a-~a.jpg" prefix (today))))
+			      (out-file (format nil "~a-~a-~a.jpg" prefix (today) muni)))
 			 (multiple-value-bind (bt vt)
 					      (values (getf latest-time :|basetime|)
 						      (getf latest-time :|validtime|))
@@ -265,7 +265,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 	   (map-layer)
 	   (nowcast-file (format nil "~a~a" (truename "./") "nowcast.png"))
 	   (map-file (format nil "~a~a" (truename "./") "map.png"))
-	   (out-file (format nil "nowcast-~a-~a.png" (today) z)))
+	   (out-file (format nil "nowcast-~a-~a-~a.png" (today) muni z)))
       (multiple-value-bind (bt vt)
 	  (values (aget latest-time "basetime")
 		  (aget latest-time "validtime"))
