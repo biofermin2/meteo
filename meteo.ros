@@ -6,7 +6,7 @@ exec ros -Q -- $0 "$@"
 (progn ;;init forms
   (ros:ensure-asdf)
   #+quicklisp(ql:quickload '(:unio :assoc-utils :dexador :jonathan) :silent t) 
-  )					
+  )					; => (:UNIO :ASSOC-UTILS :DEXADOR :JONATHAN)
 
 (defpackage :ros.script.meteo.3845973535
   (:use :cl :unio :dexador :jonathan :assoc-utils)
@@ -14,11 +14,11 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.5")		; => VERSION
+(defconstant version "0.2.5")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
-(defvar area-info)		; => AREA-INFO
-(defvar local-data)		; => LOCAL-DATA
+(defvar area-info)			; => AREA-INFO
+(defvar local-data)			; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
 
 (defparameter w-code-plist
@@ -31,15 +31,14 @@ exec ros -Q -- $0 "$@"
 	701 ☔⭐🌙 711 ☔→⭐🌙
 	801 ☃⭐🌙 811 ☃→⭐🌙))			; => W-CODE-PLIST
 
-
 (defun prompt-read (prompt)
-  "copy from pratical common lisp"
+  "from practical common lisp"
   (format *query-io* "~a: " prompt)
   (force-output *query-io*)
   (read-line *query-io*))		; => PROMPT-READ
 
+
 (defun system (control-string &rest args)
-;; copy from somewhere on internet. sorry, I forgot.
   "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
 synchronously execute the result using a Bourne-compatible shell, with
 output to *verbose-out*.  Returns the shell's exit code."
@@ -62,38 +61,50 @@ output to *verbose-out*.  Returns the shell's exit code."
     ))					; => SYSTEM
 
 
+
+
 (defun put-ht (k v ht)
   (setf (gethash k ht) v))		; => PUT-HT
+
+(defun chk-ht (ht)
+  (maphash #'(lambda (k v)
+	       (format t "~A: ~A~%" k v))
+	   ht))				; => CHK-HT
 
 (defun puts-ht (lst ht)
   (loop :for i :in lst
 	:count i :into cnt
 	:do (put-ht cnt i ht)))		; => PUTS-HT
 
-(defun chk-ht (ht)
-    (maphash #'(lambda (k v)
-		 (format t "~a: ~a~%" k v))
-	     ht))			; => CHK-HT
+(defun restart-err ()
+  (restart-case (error "There is no information applicable to the specified area.")
+    (use-value (value) 
+      :report "Use a value."
+      :interactive (lambda () 
+		     (list (read)))
+      value)
+    (ignore ()
+      :report "Ignore."
+      nil)))				; => RESTART-ERR
 
 (defun select-value (ht &aux (cnt (hash-table-count ht)))
-  (if (= cnt 0)
-      (error "There is no information applicable to the specified area.")
-      (loop :for k :being :the hash-keys :in ht
-	      :using (hash-value v)
-	    :do (format *query-io* "~d: ~s~%" k v)
-	    :finally (format *query-io* "select a number[1-~d]" cnt)))) ; => SELECT-VALUE
+  (cond ((= cnt 0) (restart-err))
+	(t (loop :for k :being :the hash-keys :in ht
+		   :using (hash-value v)
+		 :do (format *query-io* "~d: ~s~%" k v)
+		 :finally (format *query-io* "select a number[1-~d]" cnt))))) ; => SELECT-VALUE
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
-	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot)))))
+	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
     (sets area-info (seek muni area-json))
-    (puts-ht area-info area-ht))
+	(puts-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
 		   (car area-info)
 		   (gethash
 		    (parse-integer (prompt-read (select-value area-ht)) :junk-allowed t)
-		     area-ht)))
+		    area-ht)))
 	 (code (getf (read-from-string info) 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
@@ -109,6 +120,7 @@ output to *verbose-out*.  Returns the shell's exit code."
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
 
+
 (defun local-info (muni)
   (let ((url-mid "forecast/data/forecast/"))
     (multiple-value-bind (prefs local)
@@ -120,12 +132,13 @@ output to *verbose-out*.  Returns the shell's exit code."
 					   (getf d 'weathers)))))))) ; => LOCAL-INFO
 
 ;; weather map 
+
 (defun today ()
   "現在日付の取得"
   (multiple-value-bind (s m h dd mm yy)
       (decode-universal-time (get-universal-time))
     (declare (ignore s m h))
-    (format nil "~4,'0D-~2,'0D-~2,'0D" yy mm dd)))
+    (format nil "~4,'0D-~2,'0D-~2,'0D" yy mm dd))) ; => TODAY
 
 (defmacro set-readtable (opt &body body)
   "opt:upcase,downcase,preserve,invert"
@@ -133,8 +146,8 @@ output to *verbose-out*.  Returns the shell's exit code."
      (setf (readtable-case *readtable*) ,opt)
      ,@body))				; => SET-READTABLE
 
-
 (defun map-url (n)
+  "データ取得元のurlの生成"
   (let ((url-mid "weather_map/data/png/")
 	(url-bot "weather_map/data/list.json")
 	(now-list))
@@ -152,16 +165,18 @@ output to *verbose-out*.  Returns the shell's exit code."
 					     ((= n 4) (fourth now-list))
 					     (t (error "put number 1〜4")))))))))) ; => MAP-URL
 
+
 (defun download-file (uri &optional (filename))
   (with-open-file (out filename :direction :output
-                       :if-exists :supersede
-                       :element-type '(unsigned-byte 8))
-		  (with-open-stream (input (dex:get uri :want-stream t :connect-timeout nil))
-				    (loop :for b := (read-byte input nil -1)
-					  :until (minusp b)
-					  :do (write-byte b out))))) ; => DOWNLOAD-FILE
+				:if-exists :supersede
+				:element-type '(unsigned-byte 8))
+    (with-open-stream (input (dex:get uri :want-stream t :connect-timeout nil))
+      (loop :for b := (read-byte input nil -1)
+	    :until (minusp b)
+	    :do (write-byte b out)))))	; => DOWNLOAD-FILE
 
 (defun map-name (n)
+  "出力用のファイル名の生成"
   (let (prefix)
     (setq prefix
 	  (cond ((string= n "1") "asia-pacific-mono")
@@ -175,7 +190,8 @@ output to *verbose-out*.  Returns the shell's exit code."
     (download-file (map-url (parse-integer n)) out-file)
     (system (format nil "xdg-open ~a~a" (truename "./") out-file)))) ; => SHOW-WEATHER-MAP
 
-;; satellite image
+;; Satellite image
+
 (defun center-pt (z)
   (expt 2 (+ z 7)))			; => CENTER-PT
 
@@ -186,7 +202,7 @@ output to *verbose-out*.  Returns the shell's exit code."
   (/ (total-px z) 360))			; => PX/DEG
 
 (defun lon->x (lon z)
-  (truncate (/ (+ (center-pt z) (* lon (px/deg z)) 0.5) 256))) ; => LON->X
+  (floor (/ (+ (center-pt z) (* lon (px/deg z)) 0.5) 256))) ; => LON->X
 
 (defun px/rad (z)
   (/ (total-px z) (* 2 pi)))		; => PX/RAD
@@ -195,12 +211,11 @@ output to *verbose-out*.  Returns the shell's exit code."
   (min (max (sin (* lat (/ pi 180))) -0.9999) 0.9999)) ; => SINY
 
 (defun lat->y (lat z)
-  (truncate
+  (floor
    (/ (+ 0.5 (- (center-pt z)
-			 (* 0.5 (log (/ (+ 1 (siny lat))
-					(- 1 (siny lat))))
-			    (px/rad z)))) 256))) ; => LAT->Y
-
+		(* 0.5 (log (/ (+ 1 (siny lat))
+			       (- 1 (siny lat))))
+		   (px/rad z)))) 256)))	; => LAT->Y
 
 (defun rm-last-char (str)
   (subseq str 0 (1- (length str))))	; => RM-LAST-CHAR
@@ -209,7 +224,7 @@ output to *verbose-out*.  Returns the shell's exit code."
   (let* ((amedas)
 	 (name (rm-last-char muni))
 	 (url-mid "amedas/const/")
-	 (amedas-data (parse (dex:get (format nil "~a~aamedastable.json" url-top url-mid)))))
+	 (amedas-data (parse (dex:get (format nil "~a~a~a" url-top url-mid "amedastable.json")))))
     (sets amedas (seek name amedas-data))
     (values (car (getf (read-from-string (car amedas)) 'lon))
 	    (car (getf (read-from-string (car amedas)) 'lat))))) ; => LON/LAT
@@ -220,35 +235,56 @@ output to *verbose-out*.  Returns the shell's exit code."
 	(b/p)
 	(num (parse-integer n)))
     (cond ((= num 1) (setq prefix "infrared"
-			 b/p "B13/TBB")) ;赤外画像
+			   b/p "B13/TBB")) ;赤外画像
 	  ((= num 2) (setq prefix "visible"
-			 b/p "B03/ALBD")) ;可視画像
+			   b/p "B03/ALBD")) ;可視画像
 	  ((= num 3) (setq prefix "water-vapor"
-			 b/p "B08/TBB")) ;水蒸気画像
+			   b/p "B08/TBB")) ;水蒸気画像
 	  ((= num 4) (setq prefix "truecolor"
-			 b/p "REP/ETC")) ;true color再現画像
+			   b/p "REP/ETC")) ;true color再現画像
 	  ((= num 5) (setq prefix "cloud-top"
-			 b/p "SND/ETC")) ;雲頂強調画像
+			   b/p "SND/ETC")) ;雲頂強調画像
 	  (t (error "select number [1-5]")))
     (multiple-value-bind (lon lat)
-		       (lon/lat muni)
-		       (let* ((url-mid "himawari/data/satimg/")
-			      (latest-time
-			       (car (last (parse (dex:get
-						  (format nil "~a~atargetTimes_jp.json" url-top url-mid))))))
-			      (z 6)
-			      (x (lon->x lon z))
-			      (y (lat->y lat z))
-			      (out-file (format nil "~a-~a-~a.jpg" prefix (today) muni)))
-			 (multiple-value-bind (bt vt)
-					      (values (getf latest-time :|basetime|)
-						      (getf latest-time :|validtime|))
-					      (download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
-								     url-top url-mid bt vt b/p z x y)
-							     out-file)
-					      (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => SHOW-SAT-IMG
+	(lon/lat muni)
+      (let* ((url-mid "himawari/data/satimg/")
+	     (latest-time
+	       (car (last (parse (dex:get
+				  (format nil "~a~atargetTimes_jp.json" url-top url-mid))))))
+	     (z 6)
+	     (x (lon->x lon z))
+	     (y (lat->y lat z))
+	     (out-file (format nil "~a-~a-~a.jpg" prefix (today) muni)))
+	(multiple-value-bind (bt vt)
+	    (values (getf latest-time :|basetime|)
+		    (getf latest-time :|validtime|))
+	  (download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
+				 url-top url-mid bt vt b/p z x y)
+			 out-file)
+	  (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => 
 
-;; nowcast image
+;; now cast
+;; https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N1.json
+;; https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N2.json
+;; https://www.jma.go.jp/bosai/himawari/data/nowc/{basetime}/none/{validtime}/surf/hrpns/{z}/{x}/{y}.png
+;; 地図の種類
+;; 標準地図 std 5-18
+;; 淡色地図 pale 5-18
+;; English english 5-11
+;; 数値地図25000（土地条件） lcm25k_2012 10-16
+;; 土地条件図（初期整備版） lcm25k 14-16
+;; 沿岸海域土地条件図 ccm1 （平成元年以降） ccm2 （昭和63年以前） 14-16
+;; 白地図 blank 5-14
+;; x 写真 seamlessphoto 2-18
+;; 世界衛星モザイク画像 modis 2-8
+;; x 全国ランドサットモザイク画像 lndst 2-15
+;; 色別標高図 relief 5-15
+;; アナグリフ anaglyphmap_color anaglyphmap_gray 2-16
+;; 陰影起伏図 hillshademap 2-16
+;; 傾斜量図 slopemap 3-15
+;; 全国傾斜量区分図（雪崩関連） slopezone1map 3-15
+
+
 (defun show-nowcast (muni n &optional (map-type "relief"))
   "z (ズームレベル) は 4～10"
   (multiple-value-bind (lon lat)
@@ -276,7 +312,8 @@ output to *verbose-out*.  Returns the shell's exit code."
 	(download-file nowcast-layer nowcast-file)
 	(download-file map-layer map-file)
 	(system (format nil "~a ~a ~a ~a" "composite -compose over" nowcast-file map-file out-file))
-	(system (format nil "xdg-open ~a~a" (truename "./") out-file))))))
+	(system (format nil "xdg-open ~a~a" (truename "./") out-file)))))) ; => SHOW-NOWCAST
+
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
@@ -308,7 +345,7 @@ sub option:
     number means zoom level. recommend is 6.
 
 usage: $ meteo <municipality> <sub option>
-")
+")					; => PRINT-HELP
 
 (defun main (&rest argv)
   (declare (ignorable argv))
@@ -340,6 +377,7 @@ usage: $ meteo <municipality> <sub option>
 		    (string= 2nd "--nowcast"))
 		(if 4th
 		    (show-nowcast 1st 3rd 4th)
-		    (show-nowcast 1st 3rd))))))))
+		    (show-nowcast 1st 3rd)))))))) ; => MAIN
+
 
 ;;; vim: set ft=lisp lisp:
