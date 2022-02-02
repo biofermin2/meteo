@@ -168,7 +168,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 		((string= n "2") "asia-pacific-color")
 		((string= n "3") "around-Japan-mono")
 		((string= n "4") "around-Japan-color")))
-    (format nil "~a-~a~a" prefix (today) ".png"))) ; => MAP-NAME
+    (format nil "~a-~a.png" prefix (today)))) ; => MAP-NAME
 
 (defun show-weather-map (n)
   (let ((out-file (map-name n)))
@@ -217,16 +217,17 @@ output to *verbose-out*.  Returns the shell's exit code."
 (defun show-sat-img (muni n)
   "zはzoomレベル6固定"
   (let ((prefix)
-	(b/p))
-    (cond ((= n 1) (setq prefix "infrared"
+	(b/p)
+	(num (parse-integer n)))
+    (cond ((= num 1) (setq prefix "infrared"
 			 b/p "B13/TBB")) ;赤外画像
-	  ((= n 2) (setq prefix "visible"
+	  ((= num 2) (setq prefix "visible"
 			 b/p "B03/ALBD")) ;可視画像
-	  ((= n 3) (setq prefix "water-vapor"
+	  ((= num 3) (setq prefix "water-vapor"
 			 b/p "B08/TBB")) ;水蒸気画像
-	  ((= n 4) (setq prefix "truecolor"
+	  ((= num 4) (setq prefix "truecolor"
 			 b/p "REP/ETC")) ;true color再現画像
-	  ((= n 5) (setq prefix "cloud-top"
+	  ((= num 5) (setq prefix "cloud-top"
 			 b/p "SND/ETC")) ;雲頂強調画像
 	  (t (error "select number [1-5]")))
     (multiple-value-bind (lon lat)
@@ -303,7 +304,7 @@ sub option:
      3:water-vapor image
      4:truecolor image
      5:cloud-top image
-  -n <number:2〜8>, --nowcast     show nowcast image
+  -n <number:5〜8>, --nowcast     show nowcast image
     number means zoom level. recommend is 6.
 
 usage: $ meteo <municipality> <sub option>
