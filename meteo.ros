@@ -319,7 +319,9 @@ output to *verbose-out*.  Returns the shell's exit code."
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
 and print it on your command line.
 
-usage: $ meteo <your municipality in Chinese character>
+usage1: $ meteo <your municipality in Chinese character>
+
+usage2: $ meteo <option>
 
 option:
   -v, --version            print version
@@ -330,7 +332,7 @@ option:
      3: around Japan monochrome
      4: around Japan color
 
-usage: $ meteo <option>
+usage3: $ meteo <municipality> <sub option>
 
 sub option:
   -d, --detail                    print detail info
@@ -344,7 +346,6 @@ sub option:
   -n <number:5〜8>, --nowcast     show nowcast image
     number means zoom level. recommend is 6.
 
-usage: $ meteo <municipality> <sub option>
 ")					; => PRINT-HELP
 
 (defun main (&rest argv)
