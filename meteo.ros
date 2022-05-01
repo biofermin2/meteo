@@ -17,8 +17,8 @@ exec ros -Q -- $0 "$@"
 (defconstant version "0.2.5")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
-(defvar area-info nil)			; => AREA-INFO
-(defvar local-data nil)			; => LOCAL-DATA
+(defvar area-info)			; => AREA-INFO
+(defvar local-data)			; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
 
 (defparameter w-code-plist
@@ -97,7 +97,8 @@ output to *verbose-out*.  Returns the shell's exit code."
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
-	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
+	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot)))))
+	 (area-info))
     (sets area-info (seek muni area-json))
 	(puts-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
@@ -122,7 +123,8 @@ output to *verbose-out*.  Returns the shell's exit code."
 
 
 (defun local-info (muni)
-  (let ((url-mid "forecast/data/forecast/"))
+  (let ((url-mid "forecast/data/forecast/")
+	(local-data)
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (sets local-data
