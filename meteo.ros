@@ -97,8 +97,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
-	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot)))))
-	 (area-info))
+	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
     (sets area-info (seek muni area-json))
 	(puts-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
@@ -123,8 +122,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 
 
 (defun local-info (muni)
-  (let ((url-mid "forecast/data/forecast/")
-	(local-data))
+  (let ((url-mid "forecast/data/forecast/"))
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (sets local-data
