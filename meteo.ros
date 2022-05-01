@@ -124,7 +124,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 
 (defun local-info (muni)
   (let ((url-mid "forecast/data/forecast/")
-	(local-data)
+	(local-data))
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (sets local-data
