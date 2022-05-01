@@ -17,8 +17,8 @@ exec ros -Q -- $0 "$@"
 (defconstant version "0.2.5")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
-(defvar area-info)			; => AREA-INFO
-(defvar local-data)			; => LOCAL-DATA
+(defvar area-info nil)			; => AREA-INFO
+(defvar local-data nil)			; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
 
 (defparameter w-code-plist
