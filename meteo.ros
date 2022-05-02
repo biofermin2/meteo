@@ -131,7 +131,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
 					   (getf d 'weathers)))))))) ; => LOCAL-INFO
 
-;; weather map 
+;; weather map
 
 (defun today ()
   "現在日付の取得"
