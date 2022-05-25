@@ -126,7 +126,7 @@ output to *verbose-out*.  Returns the shell's exit code."
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (sets local-data
-	    (seek local (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs))) 1))
+	    (seek local (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs))) :skin 1))
       (let ((d (read-from-string (car local-data))))
 	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
 					   (getf d 'weathers)))))))) ; => LOCAL-INFO
