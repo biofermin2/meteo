@@ -317,7 +317,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
-and print it on your command line.
+and print it on your command line. ;=> https://github.com/biofermin2/meteo
 
 usage1: $ meteo <your municipality in Chinese character>
 
