@@ -14,7 +14,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.5")			     ; => VERSION
+(defconstant version "0.2.6")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)			; => AREA-INFO
@@ -30,6 +30,28 @@ exec ros -Q -- $0 "$@"
 	601 ☁⭐🌙 610 ☁→⭐🌙
 	701 ☔⭐🌙 711 ☔→⭐🌙
 	801 ☃⭐🌙 811 ☃→⭐🌙))			; => W-CODE-PLIST
+
+(defparameter prefs '(北海道 青森県 岩手県 宮城県 秋田県
+			  山形県 福島県 茨城県 栃木県 群馬県
+			  埼玉県 千葉県 東京都 神奈川 新潟県
+			  富山県 石川県 福井県 山梨県 長野県
+			  岐阜県 静岡県 愛知県 三重県 滋賀県
+			  京都府 大阪府 兵庫県 奈良県 和歌山県
+			  鳥取県 島根県 岡山県 広島県 山口県
+			  徳島県 香川県 愛媛県 高知県 福岡県
+			  佐賀県 長崎県 熊本県 大分県 宮崎県
+		      鹿児島県 沖縄県))	; => PREFS
+
+
+(defun show-pref-name (n)
+  (last (subseq prefs 0 n)))		; => SHOW-PREF-NAME
+
+(defun pref-num (code)
+  (round (/ code 10000.0)))		; => PREF-NUM
+
+(defun code->name (code)
+  (car (show-pref-name (pref-num code)))) ; => CODE->NAME
+
 
 (defun prompt-read (prompt)
   "from practical common lisp"
@@ -66,15 +88,20 @@ output to *verbose-out*.  Returns the shell's exit code."
 (defun put-ht (k v ht)
   (setf (gethash k ht) v))		; => PUT-HT
 
-(defun chk-ht (ht)
-  (maphash #'(lambda (k v)
-	       (format t "~A: ~A~%" k v))
-	   ht))				; => CHK-HT
+(defun print-ht (ht)
+  "ハッシュ表の出力関数"
+  (maphash #'(lambda (k v) (print (list k v))) ht)) ; => PRINT-HT
 
 (defun puts-ht (lst ht)
   (loop :for i :in lst
 	:count i :into cnt
 	:do (put-ht cnt i ht)))		; => PUTS-HT
+
+(defun pp-ht (lst ht)
+  "puts-htの処理中に県名を追加出来るように専用加工した関数"
+  (loop :for i :in lst
+       :count i :into cnt
+     :do (put-ht cnt (nconc `(pref-name ,(code->name (getf i 'parent))) i) ht))) ; => PP-HT
 
 (defun restart-err ()
   (restart-case (error "There is no information applicable to the specified area.")
@@ -91,21 +118,21 @@ output to *verbose-out*.  Returns the shell's exit code."
   (cond ((= cnt 0) (restart-err))
 	(t (loop :for k :being :the hash-keys :in ht
 		   :using (hash-value v)
-		 :do (format *query-io* "~d: ~s~%" k v)
+		 :do (format *query-io* "~d: ~(~s~)~%" k v)
 		 :finally (format *query-io* "select a number[1-~d]" cnt))))) ; => SELECT-VALUE
 
 (defun upper-codes (muni)
   "put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
 	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
-    (sets area-info (seek muni area-json))
-	(puts-ht area-info area-ht))
+    (sets area-info (seek muni area-json :str nil))
+    (pp-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
 		   (car area-info)
 		   (gethash
 		    (parse-integer (prompt-read (select-value area-ht)) :junk-allowed t)
 		    area-ht)))
-	 (code (getf (read-from-string info) 'parent))
+	 (code (getf info 'parent))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
     (setf area-info info)
@@ -120,16 +147,16 @@ output to *verbose-out*.  Returns the shell's exit code."
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
 
-
 (defun local-info (muni)
   (let ((url-mid "forecast/data/forecast/"))
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
-      (sets local-data
-	    (seek local (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs))) :skin 1))
-      (let ((d (read-from-string (car local-data))))
+      (let ((json-data (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs)))))
+	(sets local-data
+	      (seek local json-data :skin 1 :str nil)))
+      (let ((d (car local-data)))
 	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
-					   (getf d 'weathers)))))))) ; => LOCAL-INFO
+					   (getf d 'weathers)))))))) ; => LOCAL-INF
 
 ;; weather map
 
@@ -317,7 +344,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 
 (defconstant print-help
   "this script pickups these 3 days weather forcast data from Japan Meteorological Agency,
-and print it on your command line.
+and print it on your command line. ;=> https://github.com/biofermin2/meteo
 
 usage1: $ meteo <your municipality in Chinese character>
 
@@ -367,10 +394,10 @@ sub option:
       (t (local-info 1st)
 	 (cond ((or (string= 2nd "-d")
 		    (string= 2nd "--detail"))
-		(format t "~s" local-data))
+		(format t "~(~s~)" local-data))
 	       ((or (string= 2nd "-a")
 		    (string= 2nd "--area-info"))
-		(format t "~s" area-info))
+		(format t "~(~s~)" area-info))
 	       ((or (string= 2nd "-s")
 		    (string= 2nd "--satellite"))
 		(show-sat-img 1st 3rd))
@@ -379,6 +406,5 @@ sub option:
 		(if 4th
 		    (show-nowcast 1st 3rd 4th)
 		    (show-nowcast 1st 3rd)))))))) ; => MAIN
-
 
 ;;; vim: set ft=lisp lisp:
