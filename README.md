@@ -318,6 +318,8 @@ https://maps.gsi.go.jp/development/ichiran.html
 [Common Lispで天気予報スクリプトを作ってみた〜気象庁編〜](https://qiita.com/biofermin2/items/22634286290e779c36d5)
 
 ### update history
+[2022-07-02] 0.3.0 unioのver.3対応修正。
+
 [2022-06-11] 0.2.6 area-infoに県名を追加。unioの新オプション利用による改変。
 
 [2022-05-25] 0.2.5 unioのアップデートに対応。
