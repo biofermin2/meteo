@@ -17,9 +17,19 @@ exec ros -Q -- $0 "$@"
 (defconstant version "0.2.7")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
-(defvar area-info)			; => AREA-INFO
-(defvar local-data)			; => LOCAL-DATA
+(defvar area-info)				       ; => AREA-INFO
+(defvar local-data)				       ; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
+;; (setf a (seek "def" "((Def))" :str nil :opt :preserve)) ; => 
+;; ((Def)) ((|Def|))
+;; (car a)					; => (|Def|)
+;; ((Def)) (|Def|)
+
+;; ((Def)) ((|Def|))
+;; ((def)) ((|def|))
+
+;; (princ a)				; => ((Def))((|Def|))
+
 
 (defparameter w-code-plist
       '(100 ☼ 101 ☼☁ 102 ☼☔ 103 ☼☔ 104 ☼☃ 105 ☼☃ 106 ☼☔ 107 ☼☔ 108 ☼☔  110 ☼→☁ 111 ☼→☁ 112 ☼→☔ 113 ☼→☔ 114 ☼→☔ 115 ☼→☃ 116 ☼→☃ 117 ☼→☃ 118 ☼→☔ 119 ☼→☔ 120 ☼☔ 121 ☼☔ 122 ☼→☔ 123 ☼ 124 ☼ 125 ☼→☔ 126 ☼→☔ 127 ☼→☔ 128 ☼→☔ 130 ☼ 131 ☼ 132 ☼☁ 140 ☼☔ 160 ☼☃ 170 ☼☃ 181 ☼→☃
@@ -29,7 +39,7 @@ exec ros -Q -- $0 "$@"
 	500 ⭐🌙 501 ⭐🌙☁ 502 ⭐🌙☔ 504 ⭐🌙☃ 510 ⭐🌙→☁ 512 ⭐🌙→☔ 515 ⭐🌙→☃
 	601 ☁⭐🌙 610 ☁→⭐🌙
 	701 ☔⭐🌙 711 ☔→⭐🌙
-	801 ☃⭐🌙 811 ☃→⭐🌙))			; => W-CODE-PLIST
+	801 ☃⭐🌙 811 ☃→⭐🌙))		; => W-CODE-PLIST
 
 (defparameter prefs '(北海道 青森県 岩手県 宮城県 秋田県
 			  山形県 福島県 茨城県 栃木県 群馬県
@@ -52,7 +62,7 @@ exec ros -Q -- $0 "$@"
   (round (/ code 10000.0)))		; => PREF-NUM
 
 (defun code->name (code)
-  (show-pref-name (pref-num code))) ; => CODE->NAME
+  (show-pref-name (pref-num code)))	; => CODE->NAME
 
 (defun prompt-read (prompt)
   "from practical common lisp"
@@ -98,11 +108,13 @@ output to *verbose-out*.  Returns the shell's exit code."
 	:count i :into cnt
 	:do (put-ht cnt i ht)))		; => PUTS-HT
 
+
 (defun pp-ht (lst ht)
-  "puts-htの処理中に県名を追加出来るように専用加工した関数"
+  "puts-htの処理中に県名を追加出来るように専用加工した関数[2022-07-02 15:22:16]修正"
   (loop :for i :in lst
        :count i :into cnt
-     :do (put-ht cnt (nconc `(pref-name ,(code->name (getf i 'parent))) i) ht))) ; => PP-HT
+     :do (put-ht cnt (nconc `(pref-name ,(code->name (getf i '|parent|))) i) ht))) ; => PP-HT
+
 
 (defun restart-err ()
   (restart-case (error "There is no information applicable to the specified area.")
@@ -123,17 +135,17 @@ output to *verbose-out*.  Returns the shell's exit code."
 		 :finally (format *query-io* "select a number[1-~d]" cnt))))) ; => SELECT-VALUE
 
 (defun upper-codes (muni)
-  "put only Municipality as argument"
+  "fix [2022-07-02 17:50:58]put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
 	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
-    (sets area-info (seek muni area-json :str nil))
+    (setf area-info (seek muni area-json :exact t :opt :preserve :str nil))
     (pp-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
 		   (car area-info)
 		   (gethash
 		    (parse-integer (prompt-read (select-value area-ht)) :junk-allowed t)
 		    area-ht)))
-	 (code (getf info 'parent))
+	 (code (getf info '|parent|))
 	 (prefs-code (* 1000 (truncate (/ code 1000))))
 	 (local-code (* 10 (truncate (/ code 10)))))
     (setf area-info info)
@@ -144,20 +156,35 @@ output to *verbose-out*.  Returns the shell's exit code."
 	    (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
 
+;; (upper-codes "輪島市")			; => "170000"
+;; "170020"
+
+;; ;; (print-ht area-ht)			; => 
+;; ;; (1
+;; ;;  (PREF-NAME 石川県 |parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name|
+;; ;;   輪島市)) NIL
+;; ;; area-info				; => ((|parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name| 輪島市))
+;; ;; (upper-codes "輪島市")			; => ((|parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name| 輪島市))
+
+
 (defun code->sym (code)
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
 
 (defun local-info (muni)
+  "fix[2022-07-02 17:50:46]"
   (let ((url-mid "forecast/data/forecast/"))
     (multiple-value-bind (prefs local)
 	(upper-codes muni)
       (let ((json-data (parse (dex:get (format nil "~a~a~a.json" url-top url-mid prefs)))))
-	(sets local-data
-	      (seek local json-data :skin 1 :str nil)))
-      (let ((d (car local-data)))
-	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d 'weathercodes))
-					   (getf d 'weathers)))))))) ; => LOCAL-INF
+	(setf local-data
+	      (seek local json-data :skin 1 :str nil :opt :preserve)))
+      (let ((d (apply #'append local-data)))
+	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d '|weatherCodes|))
+				 (getf d '|weathers|)))))))) ; => LOCAL-INFO
+
+;; (local-info "輪島市")			; => ((☼ . 晴れ) (☁→☔ . |晴れ 後 くもり 夜 雨 所により 夕方 から 雷 を伴う|) (☁☔ . |くもり 一時 雨|))
+
 
 ;; weather map
 
@@ -175,23 +202,20 @@ output to *verbose-out*.  Returns the shell's exit code."
      ,@body))				; => SET-READTABLE
 
 (defun map-url (n)
-  "データ取得元のurlの生成"
-  (let ((url-mid "weather_map/data/png/")
-	(url-bot "weather_map/data/list.json")
-	now-list)
-    (sets now-list
-	  (seek "now"
-		(parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist)))
+  ;; "fix[2022-07-02 18:24:14]"
+  ;; "データ取得元のurlの生成"
+  (let* ((url-mid "weather_map/data/png/")
+	 (url-bot "weather_map/data/list.json")
+	 (list-json (parse (dex:get (format nil "~a~a" url-top url-bot)) :as :alist))
+	 (now-lst (seek "now" list-json :str nil :opt :preserve)))
     (format nil "~a~a~a"
 	    url-top
 	    url-mid
-	    (car (set-readtable :preserve
-				(last (read-from-string
-				       (cond ((= n 1) (first now-list))
-					     ((= n 2) (second now-list))
-					     ((= n 3) (third now-list))
-					     ((= n 4) (fourth now-list))
-					     (t (error "put number 1〜4")))))))))) ; => MAP-URL
+	    (car (last (cond ((= n 1) (first now-lst))
+			     ((= n 2) (second now-lst))
+			     ((= n 3) (third now-lst))
+			     ((= n 4) (fourth now-lst))
+			     (t (error "put number 1〜4")))))))) ; => MAP-URL
 
 
 (defun download-file (uri &optional (filename))
@@ -247,14 +271,19 @@ output to *verbose-out*.  Returns the shell's exit code."
 (defun rm-last-char (str)
   (subseq str 0 (1- (length str))))	; => RM-LAST-CHAR
 
+
 (defun lon/lat (muni)
-  (let* (amedas
-	 (name (rm-last-char muni))
+  "fix[2022-07-02 18:47:58] ここで緯度経度を出力している!"
+  (let* ((name (rm-last-char muni))
 	 (url-mid "amedas/const/")
-	 (amedas-data (parse (dex:get (format nil "~a~a~a" url-top url-mid "amedastable.json")))))
-    (sets amedas (seek name amedas-data))
-    (values (car (getf (read-from-string (car amedas)) 'lon))
-	    (car (getf (read-from-string (car amedas)) 'lat))))) ; => LON/LAT
+	 (amedas-data (parse (dex:get (format nil "~a~a~a" url-top url-mid "amedastable.json"))))
+	 (local-amedas (car (seek name amedas-data :str nil))))
+    (values (car (getf local-amedas 'lon))
+	    (car (getf local-amedas 'lat))))) ; => LON/LAT
+
+;; (lon/lat "輪島市")			; => 136
+;; 37
+;; 37
 
 (defun show-sat-img (muni n)
   "zはzoomレベル6固定"
@@ -288,7 +317,7 @@ output to *verbose-out*.  Returns the shell's exit code."
 	  (download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
 				 url-top url-mid bt vt b/p z x y)
 			 out-file)
-	  (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => 
+	  (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => SHOW-SAT-IMG
 
 ;; now cast
 ;; https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N1.json
