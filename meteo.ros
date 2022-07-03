@@ -59,7 +59,7 @@ exec ros -Q -- $0 "$@"
 
 
 (defun pref-num (code)
-  (round (/ code 10000.0)))		; => PREF-NUM
+  (truncate (/ code 10000.0)))		; => PREF-NUM
 
 (defun code->name (code)
   (show-pref-name (pref-num code)))	; => CODE->NAME
