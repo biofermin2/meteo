@@ -3,10 +3,8 @@
 #|
 exec ros -Q -- $0 "$@"
 |#
-(progn ;;init forms
-  (ros:ensure-asdf)
-  #+quicklisp(ql:quickload '(:unio :assoc-utils :dexador :jonathan) :silent t) 
-  )					; => (:UNIO :ASSOC-UTILS :DEXADOR :JONATHAN)
+(progn
+  #+quicklisp (ql:quickload '(:unio :assoc-utils :dexador :jonathan) :silent t)) ; => (:UNIO :ASSOC-UTILS :DEXADOR :JONATHAN)
 
 (defpackage :ros.script.meteo.3845973535
   (:use :cl :unio :dexador :jonathan :assoc-utils)
@@ -20,16 +18,6 @@ exec ros -Q -- $0 "$@"
 (defvar area-info)				       ; => AREA-INFO
 (defvar local-data)				       ; => LOCAL-DATA
 (defparameter area-ht (make-hash-table :test #'equal)) ; => AREA-HT
-;; (setf a (seek "def" "((Def))" :str nil :opt :preserve)) ; => 
-;; ((Def)) ((|Def|))
-;; (car a)					; => (|Def|)
-;; ((Def)) (|Def|)
-
-;; ((Def)) ((|Def|))
-;; ((def)) ((|def|))
-
-;; (princ a)				; => ((Def))((|Def|))
-
 
 (defparameter w-code-plist
       '(100 ☼ 101 ☼☁ 102 ☼☔ 103 ☼☔ 104 ☼☃ 105 ☼☃ 106 ☼☔ 107 ☼☔ 108 ☼☔  110 ☼→☁ 111 ☼→☁ 112 ☼→☔ 113 ☼→☔ 114 ☼→☔ 115 ☼→☃ 116 ☼→☃ 117 ☼→☃ 118 ☼→☔ 119 ☼→☔ 120 ☼☔ 121 ☼☔ 122 ☼→☔ 123 ☼ 124 ☼ 125 ☼→☔ 126 ☼→☔ 127 ☼→☔ 128 ☼→☔ 130 ☼ 131 ☼ 132 ☼☁ 140 ☼☔ 160 ☼☃ 170 ☼☃ 181 ☼→☃
@@ -70,7 +58,6 @@ exec ros -Q -- $0 "$@"
   (force-output *query-io*)
   (read-line *query-io*))		; => PROMPT-READ
 
-
 (defun system (control-string &rest args)
   "Interpolate ARGS into CONTROL-STRING as if by FORMAT, and
 synchronously execute the result using a Bourne-compatible shell, with
@@ -92,9 +79,6 @@ output to *verbose-out*.  Returns the shell's exit code."
     #+clisp             ;XXX not exactly *verbose-out*, I know
     (ext:run-shell-command  command :output :terminal :wait t)
     ))					; => SYSTEM
-
-
-
 
 (defun put-ht (k v ht)
   (setf (gethash k ht) v))		; => PUT-HT
@@ -138,7 +122,7 @@ output to *verbose-out*.  Returns the shell's exit code."
   "fix [2022-07-02 17:50:58]put only Municipality as argument"
   (let* ((url-bot "common/const/area.json")
 	 (area-json (parse (remove #\, (dex:get (format nil "~a~a" url-top url-bot))))))
-    (setf area-info (seek muni area-json :exact t :opt :preserve :str nil))
+    (setf area-info (seek muni area-json :opt :preserve :str nil))
     (pp-ht area-info area-ht))
   (let* ((info (if (= 1 (hash-table-count area-ht))
 		   (car area-info)
@@ -155,18 +139,6 @@ output to *verbose-out*.  Returns the shell's exit code."
     (values (format nil "~6,'0d" prefs-code)
 	    (format nil "~6,'0d" local-code)))) ; => UPPER-CODES
 
-
-;; (upper-codes "輪島市")			; => "170000"
-;; "170020"
-
-;; ;; (print-ht area-ht)			; => 
-;; ;; (1
-;; ;;  (PREF-NAME 石川県 |parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name|
-;; ;;   輪島市)) NIL
-;; ;; area-info				; => ((|parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name| 輪島市))
-;; ;; (upper-codes "輪島市")			; => ((|parent| 170021 |kana| わじまし |enName| |Wajima| |City| |name| 輪島市))
-
-
 (defun code->sym (code)
   "change from weather code to symbol mark"
   (getf w-code-plist code))		; => CODE->SYM
@@ -182,9 +154,6 @@ output to *verbose-out*.  Returns the shell's exit code."
       (let ((d (apply #'append local-data)))
 	(format t "~a~%" (reverse (pairlis (mapcar #'code->sym (getf d '|weatherCodes|))
 				 (getf d '|weathers|)))))))) ; => LOCAL-INFO
-
-;; (local-info "輪島市")			; => ((☼ . 晴れ) (☁→☔ . |晴れ 後 くもり 夜 雨 所により 夕方 から 雷 を伴う|) (☁☔ . |くもり 一時 雨|))
-
 
 ;; weather map
 
@@ -281,9 +250,6 @@ output to *verbose-out*.  Returns the shell's exit code."
     (values (car (getf local-amedas 'lon))
 	    (car (getf local-amedas 'lat))))) ; => LON/LAT
 
-;; (lon/lat "輪島市")			; => 136
-;; 37
-;; 37
 
 (defun show-sat-img (muni n)
   "zはzoomレベル6固定"
