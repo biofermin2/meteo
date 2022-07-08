@@ -12,7 +12,7 @@ exec ros -Q -- $0 "$@"
   (:export :area-info :local-info))	; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 (in-package :ros.script.meteo.3845973535) ; => #<PACKAGE "ROS.SCRIPT.METEO.3845973535">
 
-(defconstant version "0.2.7")			     ; => VERSION
+(defconstant version "0.3.1")			     ; => VERSION
 (defconstant url-top "https://www.jma.go.jp/bosai/") ; => URL-TOP
 
 (defvar area-info)				       ; => AREA-INFO
