@@ -250,7 +250,6 @@ output to *verbose-out*.  Returns the shell's exit code."
     (values (car (getf local-amedas 'lon))
 	    (car (getf local-amedas 'lat))))) ; => LON/LAT
 
-
 (defun show-sat-img (muni n)
   "zはzoomレベル6固定"
   (let (prefix
@@ -276,14 +275,13 @@ output to *verbose-out*.  Returns the shell's exit code."
 	     (z 6)
 	     (x (lon->x lon z))
 	     (y (lat->y lat z))
-	     (out-file (format nil "~a-~a-~a.jpg" prefix (today) muni)))
-	(multiple-value-bind (bt vt)
-	    (values (getf latest-time :|basetime|)
-		    (getf latest-time :|validtime|))
-	  (download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
-				 url-top url-mid bt vt b/p z x y)
-			 out-file)
-	  (system (format nil "xdg-open ~a~a" (truename "./") out-file))))))) ; => SHOW-SAT-IMG
+	     (out-file (format nil "~a-~a-~a.jpg" prefix (today) muni))
+	     (bt (getf latest-time :|basetime|))
+	     (vt (getf latest-time :|validtime|)))
+	(download-file (format nil "~a~a~a/jp/~a/~a/~a/~a/~a.jpg"
+			       url-top url-mid bt vt b/p z x y)
+		       out-file)
+	(system (format nil "xdg-open ~a~a" (truename "./") out-file))))))
 
 ;; now cast
 ;; https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N1.json
